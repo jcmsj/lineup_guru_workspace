@@ -116,7 +116,6 @@ class ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(40.0),
       ),
       child: SizedBox(
-        height: 150.0, // Adjust the height here
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

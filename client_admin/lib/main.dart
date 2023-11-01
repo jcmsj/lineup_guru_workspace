@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
+import 'package:lineup_guru_admin/add_queue.dart';
+import 'package:lineup_guru_admin/edit_queue.dart';
 import 'page_title_widget.dart';
 import 'queue_list.dart';
 import 'server_url_widget.dart';
@@ -26,10 +28,10 @@ class MyApp extends StatelessWidget {
           create: (ctx) => ServerUrlNotifier(),
         ),
       ],
-      child: MaterialApp(
-        theme: customTheme(),
-        home: BottomNavBar(),
-      ),
+      child: MaterialApp(theme: customTheme(), routes: {
+        '/': (context) => const BottomNavBar(),
+        '/editor': (context) => const EditQueueScreen(),
+      }),
     );
   }
 
@@ -91,11 +93,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        const PageTitleWidget(title: "Services"),
+        PageTitleWidget(title: "Services"),
         Expanded(
-          child: buildFutureBuilderQueues(),
+          child: QueueBuilder(),
         ),
       ],
     );
@@ -157,8 +159,9 @@ class _BottomNavBarState extends State<BottomNavBar>
   int _tabIndex = 0;
   int get tabIndex => _tabIndex;
   set tabIndex(int v) {
-    _tabIndex = v;
-    setState(() {});
+    setState(() {
+      _tabIndex = v;
+    });
   }
 
   late PageController pageController;
@@ -184,6 +187,7 @@ class _BottomNavBarState extends State<BottomNavBar>
           SettingsPage(),
         ],
       ),
+      floatingActionButton: _tabIndex != 0 ? null : const AddQueueBtn(),
       bottomNavigationBar: CircleNavBar(
         activeIcons: const [
           Icon(Icons.home_outlined, color: Colors.white, size: 35),

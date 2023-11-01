@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'main.dart';
 import 'server_url_widget.dart';
-import 'edit_queue.dart';
 import 'second_route.dart';
 
 // ignore: non_constant_identifier_names
@@ -17,6 +17,16 @@ Future<List<ShopQueue>> fetchQueues(String url) async {
         .map((data) => ShopQueue.fromJson(data))
         .toList()
         .cast<ShopQueue>();
+  } else {
+    throw Exception('Failed to fetch queue');
+  }
+}
+
+Future<ShopQueue> fetchQueue(String url, String queueName) async {
+  final response = await http.get(Uri.parse('$url/queue/$queueName'));
+  if (response.statusCode == 200) {
+    // Do something with the response body
+    return ShopQueue.fromJson(jsonDecode(response.body));
   } else {
     throw Exception('Failed to fetch queue');
   }
@@ -50,12 +60,52 @@ class ShopQueue {
   }
 }
 
-// Create a FutureBuilder widget for the queues
-Consumer<ServerUrlNotifier> buildFutureBuilderQueues() {
-  return Consumer<ServerUrlNotifier>(
-    builder: (BuildContext context, ServerUrlNotifier value, Widget? child) {
-      return FutureBuilder<List<ShopQueue>>(
-        future: fetchQueues(value.serverUrl),
+class QueueBuilder extends StatefulWidget {
+  const QueueBuilder({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _QueueBuilderState();
+  }
+}
+
+class _QueueBuilderState extends State<QueueBuilder> {
+  Future<List<ShopQueue>> _future = Future.value([]);
+  late Timer timer;
+  @override
+  void initState() {
+    super.initState();
+    getQueues();
+    setUpTimedFetch();
+  }
+
+  setUpTimedFetch() {
+    timer = Timer.periodic(const Duration(milliseconds: 3000), (timer) {
+      getQueues();
+    });
+  }
+
+  void getQueues() {
+    setState(() {
+      _future = fetchQueues(
+        Provider.of<ServerUrlNotifier>(
+          context,
+          listen: false,
+        ).serverUrl,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ShopQueue>>(
+        future: _future,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<ShopQueue>? data = snapshot.data;
@@ -73,10 +123,8 @@ Consumer<ServerUrlNotifier> buildFutureBuilderQueues() {
             return Text("${snapshot.error}");
           }
           return const LoadingQueueWidget();
-        },
-      );
-    },
-  );
+        });
+  }
 }
 
 class LoadingQueueWidget extends StatelessWidget {
@@ -113,10 +161,7 @@ class QueueItem extends StatelessWidget {
       onTap: () {
         print("napindot ${data.name}");
         Provider.of<QueueNotifier>(context, listen: false).setQueue(data);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const EditQueueScreen()),
-        );
+        Navigator.pushNamed(context, "/editor");
       },
       child: ServiceCard(data.name, data.iconName),
     );
