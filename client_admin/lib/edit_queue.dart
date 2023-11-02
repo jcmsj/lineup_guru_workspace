@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared/queue_notifier.dart';
+import 'package:shared/server_url_notifier.dart';
+import 'package:shared/service_card.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'main.dart';
-import 'second_route.dart';
-import 'server_url_widget.dart';
 
 class EditQueueScreen extends StatefulWidget {
   const EditQueueScreen({super.key});
@@ -73,6 +73,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Edit Queue'),
+            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
           ),
           floatingActionButton: saveBtn(),
           body: Padding(
@@ -202,12 +203,8 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         previousNumberBtn(context),
-        Text(
-          '$_queueCurrent',
-          style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                color: Theme.of(context).cardColor,
-              ),
-        ),
+        Text('$_queueCurrent',
+            style: Theme.of(context).textTheme.headlineLarge!),
         nextNumberBtn(context),
       ],
     );
@@ -231,8 +228,6 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           _queueCurrent--;
         });
       },
-      style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor),
       child: const Icon(Icons.remove),
     );
   }
@@ -244,8 +239,6 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           _queueCurrent++;
         });
       },
-      style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor),
       child: const Icon(Icons.add),
     );
   }
@@ -270,13 +263,43 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       if (_queueNameController.text == model.queue?.name &&
           _iconNameController.text == model.queue?.iconName &&
           _queueCurrent == model.queue?.current) {
-        return const Text('');
+        return const Text(""); //ShowQR();
       }
 
       return FloatingActionButton.extended(
         onPressed: updateQueue,
         label: const Text('Save'),
         icon: const Icon(Icons.save),
+      );
+    });
+  }
+}
+
+class ShowQR extends StatelessWidget {
+  const ShowQR({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<QueueNotifier>(builder: (context, model, child) {
+      return TextButton.icon(
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            '/qr',
+            arguments: model.queue,
+          );
+        },
+        icon: const Icon(
+          Icons.qr_code_outlined,
+        ),
+        label: const Text(
+          "Show QR",
+        ),
+        style: TextButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary),
       );
     });
   }

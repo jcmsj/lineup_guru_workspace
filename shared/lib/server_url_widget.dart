@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ServerUrlNotifier extends ChangeNotifier {
-  String _serverUrl =
-      "http://lineup-gu.ru.larkspur.website"; //"http://localhost:88";
-
-  String get serverUrl => _serverUrl;
-
-  set serverUrl(String url) {
-    _serverUrl = url;
-    notifyListeners();
-  }
-}
+import 'server_url_notifier.dart';
 
 class ServerUrlWidget extends StatefulWidget {
   const ServerUrlWidget({super.key});
@@ -60,22 +50,18 @@ class _ServerUrlState extends State<ServerUrlWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ServerUrlNotifier>(
-      builder: ((context, model, child) {
-        return TextField(
-          controller: textFieldCtl,
-          style: const TextStyle(fontSize: 20),
-          textAlignVertical: TextAlignVertical.center,
-          textAlign: TextAlign.center,
-          decoration: const InputDecoration(
-              floatingLabelAlignment: FloatingLabelAlignment.center,
-              hintStyle: TextStyle(
-                color: Colors.white,
-                fontSize: 25,
-              ),
-              hintText: 'Server Url'),
-        );
-      }),
+    return TextField(
+      controller: textFieldCtl,
+      style: const TextStyle(fontSize: 12),
+      textAlignVertical: TextAlignVertical.center,
+      textAlign: TextAlign.center,
+      decoration: const InputDecoration(
+          floatingLabelAlignment: FloatingLabelAlignment.center,
+          hintStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 25,
+          ),
+          hintText: 'Enter server Url'),
     );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'server_url_widget.dart';
+import 'package:shared/server_url_widget.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

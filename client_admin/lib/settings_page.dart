@@ -1,33 +1,36 @@
 import 'package:flutter/material.dart';
-import 'server_url_widget.dart';
+import 'package:shared/server_url_widget.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _Item(child: ServerUrlWidget()),
-            SizedBox(height: 50.0),
             _Item(
+              child: ListTile(
+                leading: const Icon(Icons.brush_outlined),
+                title: const Text("App Theme"),
+                onTap: () {
+                  Navigator.pushNamed(context, "/theme-editor");
+                },
+              ),
+            ),
+            const SizedBox(height: 50.0),
+            const _Item(
               child: Text(
                 "Manual",
                 style: TextStyle(fontSize: 25),
               ),
             ),
-            SizedBox(height: 50.0),
-            _Item(
-              child: Text(
-                "App Theme",
-                style: TextStyle(fontSize: 25),
-              ),
-            ),
-            SizedBox(height: 50.0),
-            _Item(
+            const SizedBox(height: 50.0),
+            const _Item(child: ServerUrlWidget()),
+            const SizedBox(height: 50.0),
+            const _Item(
               child: Text(
                 "About Us",
                 style: TextStyle(fontSize: 25),

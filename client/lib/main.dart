@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'page_title_widget.dart';
-import 'queue_list.dart';
-import 'server_url_widget.dart';
-import 'second_route.dart';
+import 'package:lineup_guru_app/queue_list.dart';
+import 'package:shared/page_title_widget.dart';
+import 'package:shared/queue_list.dart';
+import 'package:shared/queue_notifier.dart';
 import 'package:provider/provider.dart';
+import 'package:shared/server_url_notifier.dart';
+import 'package:shared/theme_switcher_screen.dart';
+import 'package:shared/custom_app_bar.dart';
 import 'q_r_view_example.dart';
 import 'settings_page.dart';
 
-void main() async {
+void main() {
   runApp(const MyApp());
 }
 
@@ -25,65 +28,37 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => ServerUrlNotifier(),
         ),
+        ChangeNotifierProvider(
+          create: (ctx) => ThemeNotifier(),
+        ),
       ],
-      child: MaterialApp(
-        theme: customTheme(),
-        home: BottomNavBar(),
-      ),
+      child: Consumer<ThemeNotifier>(builder: (context, theme, child) {
+        return MaterialApp(
+          theme: theme.theme,
+          home: const BottomNavBar(),
+        );
+      }),
     );
   }
 
   ThemeData customTheme() {
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color.fromARGB(255, 255, 189, 89),
-        surface: const Color.fromARGB(255, 64, 55, 52),
-        onSurface: Colors.white,
-        background: const Color.fromARGB(255, 255, 247, 207),
+        seedColor: const Color(0xFFFFBD59),
+        // surface: const Color(0xFF403734),
+        // onSurface: Colors.white,
+        // background: const Color(0xFFFFF7CF),
         brightness: Brightness.light,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color.fromARGB(255, 255, 235, 150),
-        foregroundColor: Colors.black,
-      ),
-      primaryColor: const Color.fromARGB(255, 255, 189, 89),
+      // appBarTheme: const AppBarTheme(
+      //   backgroundColor: Color(0xFFFFEB96),
+      //   foregroundColor: Colors.black,
+      // ),
+      // primaryColor: const Color.fromARGB(255, 255, 189, 89),
+      // primaryColorLight: const Color(0xFFFFBD59),
       useMaterial3: true,
     );
   }
-}
-
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final double height;
-
-  const CustomAppBar({super.key, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(Icons.qr_code),
-            SizedBox(width: 10),
-            Text(
-              "Line-Up Guru",
-              style: TextStyle(fontSize: 25),
-            ),
-          ],
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => Size.fromHeight(height);
 }
 
 class HomePage extends StatelessWidget {
@@ -95,51 +70,11 @@ class HomePage extends StatelessWidget {
       children: [
         const PageTitleWidget(title: "Services"),
         Expanded(
-          child: buildFutureBuilderQueues(),
+          child: QueueBuilder(
+            builder: (queue) => QueueItem(data: queue),
+          ),
         ),
       ],
-    );
-  }
-}
-
-class ServiceCard extends StatelessWidget {
-  final String serviceName;
-  final String iconName;
-  const ServiceCard(this.serviceName, this.iconName, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(40.0),
-      ),
-      child: SizedBox(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Dont use an Icon/IconData since we cant generate a list of available icons in the app. Also The admin needs to visit the google material icons page for the available icons and names
-            Text(
-              iconName,
-              style: const TextStyle(
-                fontFamily: "MaterialIcons",
-                color: Colors.yellowAccent,
-                fontSize: 48,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              serviceName,
-              style: const TextStyle(
-                fontSize: 17.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -156,8 +91,9 @@ class _BottomNavBarState extends State<BottomNavBar>
   int _tabIndex = 0;
   int get tabIndex => _tabIndex;
   set tabIndex(int v) {
-    _tabIndex = v;
-    setState(() {});
+    setState(() {
+      _tabIndex = v;
+    });
   }
 
   late PageController pageController;
@@ -168,10 +104,24 @@ class _BottomNavBarState extends State<BottomNavBar>
     pageController = PageController(initialPage: _tabIndex);
   }
 
+  Icon icon(IconData iconData, bool isActive) {
+    final appBarTheme = Theme.of(context).appBarTheme;
+    return Icon(
+      iconData,
+      color: isActive
+          ? Theme.of(context).colorScheme.surface
+          : appBarTheme.foregroundColor,
+      size: 35,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(height: 125),
+      appBar: const CustomAppBar(
+        height: 125,
+        title: "Lineup Guru",
+      ),
       body: PageView(
         controller: pageController,
         onPageChanged: (v) {
@@ -184,20 +134,21 @@ class _BottomNavBarState extends State<BottomNavBar>
         ],
       ),
       bottomNavigationBar: CircleNavBar(
-        activeIcons: const [
-          Icon(Icons.home_outlined, color: Colors.white, size: 35),
-          Icon(Icons.qr_code_sharp, color: Colors.white, size: 35),
-          Icon(Icons.settings_outlined, color: Colors.white, size: 35),
+        activeIcons: [
+          icon(Icons.home_outlined, true),
+          icon(Icons.qr_code_sharp, true),
+          icon(Icons.settings_outlined, true),
         ],
-        inactiveIcons: const [
-          Icon(Icons.home_outlined, color: Colors.black, size: 35),
-          Icon(Icons.qr_code_sharp, color: Colors.black, size: 35),
-          Icon(Icons.settings_outlined, color: Colors.black, size: 35),
+        inactiveIcons: [
+          icon(Icons.home_outlined, false),
+          icon(Icons.qr_code_sharp, false),
+          icon(Icons.settings_outlined, false),
         ],
-        color: const Color.fromARGB(255, 255, 235, 150),
-        circleColor: const Color.fromARGB(255, 64, 55, 52),
-        circleShadowColor: Colors.black,
-        elevation: 10,
+        color: Theme.of(context).colorScheme.primaryContainer,
+        circleColor: Theme.of(context).colorScheme.onBackground,
+        circleShadowColor: Theme.of(context).colorScheme.onSurface,
+        shadowColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 5,
         height: 90,
         circleWidth: 70,
         activeIndex: tabIndex,

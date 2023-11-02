@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:shared/server_url_notifier.dart';
 
 class QRViewExample extends StatefulWidget {
-  const QRViewExample({Key? key}) : super(key: key);
+  const QRViewExample({super.key});
 
   @override
   State<StatefulWidget> createState() => _QRViewExampleState();
@@ -29,11 +31,14 @@ class _QRViewExampleState extends State<QRViewExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          controller!.resumeCamera();
+        },
+        child: const Icon(Icons.restart_alt),
+      ),
       body: Column(
         children: <Widget>[
-          Text(result?.code?.toString() ?? 'Scan a code',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, color: Colors.black)),
           Expanded(flex: 4, child: _buildQrView(context)),
         ],
       ),
@@ -56,7 +61,7 @@ class _QRViewExampleState extends State<QRViewExample> {
           borderRadius: 20,
           borderLength: 40,
           borderWidth: 10,
-          // overlayColor: Color.fromARGB(255, 255, 247, 207),
+          overlayColor: Theme.of(context).colorScheme.background,
           cutOutSize: scanArea),
       onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
     );
@@ -65,15 +70,56 @@ class _QRViewExampleState extends State<QRViewExample> {
   void _onQRViewCreated(QRViewController controller) {
     setState(() {
       this.controller = controller;
-      controller.scannedDataStream.listen((scanData) {
-        if (mounted) {
-          setState(() {
-            result = scanData;
-            controller.pauseCamera();
-          });
-        }
-      });
     });
+
+    if (!mounted) {
+      return;
+    }
+
+    controller.scannedDataStream.listen(onScanData);
+  }
+
+  void onScanData(scanData) {
+    controller!.pauseCamera();
+    setState(() {
+      result = scanData;
+    });
+    if (result == null) {
+      return;
+    }
+    Provider.of<ServerUrlNotifier>(context, listen: false)
+        .tryCandidate(result!.code.toString())
+        .onError(onServerUrlErr)
+        .then((_) => {
+              // Show toast that is connected to the server
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    showCloseIcon: true,
+                    content: Text(
+                      'Connected to ${result!.code.toString()}',
+                    )),
+              ),
+            });
+  }
+
+  onServerUrlErr(Object? e, StackTrace? stackTrace) {
+    log('onServerUrlErr $e');
+    if (e is FormatException) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+        'Invalid URL',
+      )));
+      controller?.resumeCamera();
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          showCloseIcon: true,
+          content: Text(
+            'Unknown Error ${e.toString()}}',
+          )),
+    );
+    result = null;
   }
 
   void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {

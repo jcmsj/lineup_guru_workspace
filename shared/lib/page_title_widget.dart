@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PageTitleWidget extends StatefulWidget {
   final String title;
-  const PageTitleWidget({Key? key, required this.title}) : super(key: key);
+  const PageTitleWidget({super.key, required this.title});
 
   @override
   PageTitleState createState() => PageTitleState();
@@ -17,17 +17,15 @@ class PageTitleState extends State<PageTitleWidget> {
         children: [
           Text(
             widget.title,
-            style: const TextStyle(
-              fontSize: 28.0,
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 84, 84, 84),
+            style: TextStyle(
+              fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
             ),
           ),
           const SizedBox(height: 8.0),
           Container(
             height: 1.5,
             width: 500,
-            color: const Color.fromARGB(255, 255, 189, 89),
+            color: Theme.of(context).colorScheme.surfaceVariant,
           ),
         ],
       ),

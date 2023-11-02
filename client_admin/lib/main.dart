@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'package:lineup_guru_admin/add_queue.dart';
-import 'package:lineup_guru_admin/edit_queue.dart';
-import 'page_title_widget.dart';
-import 'queue_list.dart';
-import 'server_url_widget.dart';
-import 'second_route.dart';
 import 'package:provider/provider.dart';
-import 'q_r_view_example.dart';
+import 'package:shared/page_title_widget.dart';
+import 'package:shared/queue_list.dart';
+import 'package:shared/queue_notifier.dart';
+import 'package:shared/server_url_notifier.dart';
+import 'package:shared/shop_queue.dart';
+import 'package:shared/custom_app_bar.dart';
+import 'package:shared/theme_switcher_screen.dart';
+import 'qr_screen.dart';
+import 'queue_list.dart';
+import 'add_queue.dart';
+import 'edit_queue.dart';
 import 'settings_page.dart';
 
-void main() async {
+void main() {
   runApp(const MyApp());
 }
 
@@ -27,14 +31,23 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => ServerUrlNotifier(),
         ),
+        ChangeNotifierProvider(create: (ctx) => ThemeNotifier()),
       ],
-      child: MaterialApp(theme: customTheme(), routes: {
-        '/': (context) => const BottomNavBar(),
-        '/editor': (context) => const EditQueueScreen(),
+      child: Consumer<ThemeNotifier>(builder: (context, theme, child) {
+        return MaterialApp(
+          theme: theme.theme,
+          routes: {
+            '/': (ctx) => const BottomNavBar(),
+            '/editor': (ctx) => const EditQueueScreen(),
+            '/qr': (ctx) => const QRScreen(),
+            '/theme-editor': (ctx) => const ThemeSwitcherScreen(),
+          },
+        );
       }),
     );
   }
 
+  // TODO make all these configurable
   ThemeData customTheme() {
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
@@ -54,95 +67,21 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final double height;
-
-  const CustomAppBar({super.key, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(Icons.qr_code),
-            SizedBox(width: 10),
-            Text(
-              "Line-Up Guru | Admin",
-              style: TextStyle(fontSize: 25),
-            ),
-          ],
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => Size.fromHeight(height);
-}
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        PageTitleWidget(title: "Services"),
+        const PageTitleWidget(title: "Services"),
         Expanded(
-          child: QueueBuilder(),
+          child: QueueBuilder(
+            // Todo: Responsive sizing in wide screens
+            builder: (ShopQueue queue) => QueueItem(data: queue),
+          ),
         ),
       ],
-    );
-  }
-}
-
-class ServiceCard extends StatelessWidget {
-  final String serviceName;
-  final String iconName;
-  const ServiceCard(this.serviceName, this.iconName, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(40.0),
-      ),
-      child: SizedBox(
-        height: 150.0, // Adjust the height here
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Dont use an Icon/IconData since we cant generate a list of available icons in the app. Also The admin needs to visit the google material icons page for the available icons and names
-            Text(
-              iconName,
-              style: const TextStyle(
-                fontFamily: "MaterialIcons",
-                color: Colors.yellowAccent,
-                fontSize: 48,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              serviceName,
-              style: const TextStyle(
-                fontSize: 17.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -175,7 +114,10 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(height: 125),
+      appBar: const CustomAppBar(
+        height: 125,
+        title: "Line-Up Guru | Admin",
+      ),
       body: PageView(
         controller: pageController,
         onPageChanged: (v) {
@@ -183,25 +125,28 @@ class _BottomNavBarState extends State<BottomNavBar>
         },
         children: const [
           HomePage(),
-          QRViewExample(),
+          QRServerScreen(),
           SettingsPage(),
         ],
       ),
       floatingActionButton: _tabIndex != 0 ? null : const AddQueueBtn(),
       bottomNavigationBar: CircleNavBar(
-        activeIcons: const [
-          Icon(Icons.home_outlined, color: Colors.white, size: 35),
-          Icon(Icons.qr_code_sharp, color: Colors.white, size: 35),
-          Icon(Icons.settings_outlined, color: Colors.white, size: 35),
+        activeIcons: [
+          Icon(Icons.home_outlined,
+              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
+          Icon(Icons.qr_code_sharp,
+              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
+          Icon(Icons.settings_outlined,
+              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
         ],
         inactiveIcons: const [
-          Icon(Icons.home_outlined, color: Colors.black, size: 35),
-          Icon(Icons.qr_code_sharp, color: Colors.black, size: 35),
-          Icon(Icons.settings_outlined, color: Colors.black, size: 35),
+          Icon(Icons.home_outlined, size: 35),
+          Icon(Icons.qr_code_sharp, size: 35),
+          Icon(Icons.settings_outlined, size: 35),
         ],
-        color: const Color.fromARGB(255, 255, 235, 150),
-        circleColor: const Color.fromARGB(255, 64, 55, 52),
-        circleShadowColor: Colors.black,
+        color: Theme.of(context).colorScheme.primaryContainer,
+        circleColor: Theme.of(context).colorScheme.onBackground,
+        circleShadowColor: Theme.of(context).colorScheme.onSurface,
         elevation: 10,
         height: 90,
         circleWidth: 70,

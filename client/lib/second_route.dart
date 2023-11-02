@@ -1,54 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'queue_list.dart';
-import 'page_title_widget.dart';
-import 'server_url_widget.dart';
+import 'package:shared/page_title_widget.dart';
+import 'package:shared/queue_notifier.dart';
 import 'package:provider/provider.dart';
-
-// Create a ChangeNotifier for a nullable ShopQueue variable with an extra field my number
-class QueueNotifier extends ChangeNotifier {
-  ShopQueue? _queue;
-  int _myNumber = -1;
-  ShopQueue? get queue => _queue;
-  int get myNumber => _myNumber;
-  void setQueue(ShopQueue queue) {
-    _queue = queue;
-    notifyListeners();
-  }
-
-  void setMyNumber(int myNumber) {
-    _myNumber = myNumber;
-    notifyListeners();
-  }
-}
-
-Future<ShopQueue> pollQueue(String url, String name) async {
-  // Get ServerURL from ServerUrlNotifier
-  final response = await http.get(Uri.parse('$url/queue/$name'));
-  if (response.statusCode == 200) {
-    // body -> json -> Update queueNotifier
-    return ShopQueue.fromJson(jsonDecode(response.body));
-  }
-
-  throw Exception(
-    'Failed to fetch queue. Reason: ${response.body}',
-  );
-}
-
-Future<int> joinQueue(ShopQueue q, String url) async {
-  final response = await http.post(
-    Uri.parse('$url/join/${q.id}'),
-  );
-  if (response.statusCode == 200) {
-    // Do something with the response body
-    Map<String, dynamic> result = jsonDecode(response.body);
-    return result['number'];
-  } else {
-    throw Exception('Failed to join queue');
-  }
-}
+import 'package:shared/server_url_notifier.dart';
 
 class JoinOrQRFab extends StatefulWidget {
   const JoinOrQRFab({super.key});
@@ -64,27 +20,36 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
         builder: (context, queueNotifier, serverUrlNotifier, child) {
       if (queueNotifier.queue == null) {
         return const CircularProgressIndicator();
-      } else if (queueNotifier._myNumber > 0) {
-        return FloatingActionButton.extended(
-          onPressed: () {},
-          label: const Text("Show QR Code"),
-          icon: const Icon(Icons.qr_code),
-        );
+      } else if (queueNotifier.myNumber > 0) {
+        if (queueNotifier.activeQueueId != queueNotifier.queue?.id) {
+          return FloatingActionButton.extended(
+            onPressed: () {},
+            label: const Text("You are in a different queue"),
+            icon: const Icon(Icons.warning),
+          );
+        } else {
+          return const Text("");
+        }
       }
+      // } else if (queueNotifier.myNumber > 0) {
+      //   return FloatingActionButton.extended(
+      //     onPressed: () {},
+      //     label: const Text("Show QR Code"),
+      //     icon: const Icon(Icons.qr_code),
+      //   );
+      // }
 
       return FloatingActionButton.extended(
           disabledElevation: 0,
           onPressed: () async {
-            queueNotifier.setMyNumber(await joinQueue(
+            queueNotifier.myNumber = await joinQueue(
               queueNotifier.queue!,
-              serverUrlNotifier.serverUrl == ""
-                  ? "http://lineup-gu.ru.larkspur.website"
-                  : serverUrlNotifier.serverUrl,
-            ));
-            queueNotifier.setQueue(await pollQueue(
+              serverUrlNotifier.serverUrl,
+            );
+            queueNotifier.queue = await pollQueue(
               serverUrlNotifier.serverUrl,
               queueNotifier.queue!.name,
-            ));
+            );
           },
           label: const Text("Join Queue"),
           icon: const Icon(Icons.add));
@@ -104,16 +69,16 @@ class SecondRoute extends StatefulWidget {
 class _SecondRouteState extends State<SecondRoute> {
   // Poll server for latest queue every 2 seconds
   late Timer _timer;
+
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      print("polling queue");
-      Provider.of<QueueNotifier>(context, listen: false).setQueue(
-        await pollQueue(
-            Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
-            Provider.of<QueueNotifier>(context, listen: false).queue!.name),
-      );
+      log("polling queue");
+      final qn = Provider.of<QueueNotifier>(context, listen: false);
+      qn.queue = await pollQueue(
+          Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
+          qn.queue!.name);
     });
   }
 
@@ -130,67 +95,80 @@ class _SecondRouteState extends State<SecondRoute> {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Queue  Details"),
+          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
         ),
         floatingActionButton: const JoinOrQRFab(),
         body: Center(
           child: Column(
             children: [
               PageTitleWidget(title: "Queue: ${queueNotifier.queue?.name}"),
-              SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Currently Serving:",
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Text(
-                        "# ${queueNotifier.queue?.current}",
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      const Text("Last Number in Queue:",
-                          style: TextStyle(fontSize: 20)),
-                      Text(
-                        "# ${queueNotifier.queue?.lastPosition}",
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Card(
-                child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        const Text("Status:"),
-                        queueNotifier._myNumber < 0
-                            ? const Text("Not in queue",
-                                style: TextStyle(fontSize: 20))
-                            : Text(
-                                "You are # ${queueNotifier._myNumber}",
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                      ],
-                    )),
-              ),
+              const SizedBox(height: 20),
+              currentlyServing(queueNotifier),
+              const SizedBox(height: 20),
+              lastNumber(queueNotifier),
+              const SizedBox(height: 20),
+              queueNotifier.activeQueueId == queueNotifier.queue?.id
+                  ? customerStatus(queueNotifier)
+                  : const Text(""),
             ],
           ),
         ),
       );
     });
+  }
+
+  Card currentlyServing(QueueNotifier queueNotifier) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            const Text(
+              "Currently Serving:",
+              style: TextStyle(fontSize: 20),
+            ),
+            Text(
+              "# ${queueNotifier.queue?.current}",
+              style: const TextStyle(fontSize: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Card customerStatus(QueueNotifier queueNotifier) {
+    return Card(
+      child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              const Text("Status:"),
+              queueNotifier.myNumber < 0
+                  ? const Text("Not in queue", style: TextStyle(fontSize: 20))
+                  : Text(
+                      "You are # ${queueNotifier.myNumber}",
+                      style: const TextStyle(fontSize: 20),
+                    ),
+            ],
+          )),
+    );
+  }
+
+  Card lastNumber(QueueNotifier queueNotifier) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            const Text("Last Number in Queue:", style: TextStyle(fontSize: 20)),
+            Text(
+              "# ${queueNotifier.queue?.lastPosition}",
+              style: const TextStyle(fontSize: 20),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
