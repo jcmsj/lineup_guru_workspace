@@ -14,6 +14,9 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->delete('/queue/{id:\d+}', 'deleteQueue');
     $r->post('/join/{id:\d+}', 'joinQueue');
     $r->post('/update/{id:\d+}', 'updateQueue');
+    $r->get("/ping", function() {
+        echo "pong";
+    });
 });
 
 $db = new SQLite3('queue.sqlite');
@@ -71,9 +74,6 @@ function getAllQueues($db) {
 function createQueue($db, $vars) {
     /** @var string */
     $name = $_POST['name'];
-
-    // output to file the contents of $_POST
-    file_put_contents('post.txt', print_r($_POST, true));
 
     $sql = 'INSERT INTO queue (name, icon, current, last_position) VALUES (:name, \'\', 0, 0)';
     $stmt = $db->prepare($sql);
@@ -160,71 +160,3 @@ function echo_json(mixed $json) {
     echo json_encode($json);
 }
 
-// Login as admin
-function loginAdmin($db, $username, $password) {
-    $sql = 'SELECT * FROM admin WHERE username = :username AND password = :password';
-    $stmt = $db->prepare($sql);
-    $hashed_password = hash('sha256',$password);
-    $stmt->bindParam(':username', $username);
-    $stmt->bindParam(':password', $hashed_password);
-    $result = $stmt->execute();
-
-    if ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $_SESSION['admin'] = true;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-// UpdateQueue
-function aupdateQueue($db, $vars) {
-    if (!isset($_SESSION['admin'])) {
-        header('HTTP/1.1 401 Unauthorized');
-        echo 'Admin access required';
-        exit();
-    }
-
-    $sql = 'UPDATE queue SET name = :name, current = :current, last_position = :last_position WHERE id = :id';
-    $stmt = $db->prepare($sql);
-    $stmt->bindParam(":id", $vars['id']);
-    $stmt->bindParam(":name", $_POST['name']);
-    $stmt->bindParam(":current", $_POST['current']);
-    $stmt->bindParam(":last_position", $_POST['last_position']);
-    $stmt->execute();
-}
-
-// CreateQueue
-function acreateQueue($db) {
-    if (!isset($_SESSION['admin'])) {
-        header('HTTP/1.1 401 Unauthorized');
-        echo 'Admin access required';
-        exit();
-    }
-
-    /** @var string */
-    $name = $_POST['name'];
-    $sql = 'INSERT INTO queue (name, current, last_position) VALUES (:name, 0, 0)';
-    $stmt = $db->prepare($sql);
-    $stmt->bindParam(':name', $name);
-    $stmt->execute();
-    $id = $db->lastInsertRowID();
-    echo_json(['id' => $id]);
-}
-
-// DeleteQueue
-function adeleteQueue($db, $vars) {
-    if (!isset($_SESSION['admin'])) {
-        header('HTTP/1.1 401 Unauthorized');
-        echo 'Admin access required';
-        exit();
-    }
-
-    $sql = 'DELETE FROM queue WHERE name = :name';
-    $stmt = $db->prepare($sql);
-    $stmt->bindParam(':name', $vars['name']);
-    $stmt->execute();
-
-    header('HTTP/1.1 204 No Content');
-}
-?>
