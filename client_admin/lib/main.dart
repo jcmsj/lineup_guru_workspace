@@ -31,11 +31,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => ServerUrlNotifier(),
         ),
-        ChangeNotifierProvider(create: (ctx) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (ctx) => AppThemeNotifier()),
       ],
-      child: Consumer<ThemeNotifier>(builder: (context, theme, child) {
+      child: Consumer<AppThemeNotifier>(builder: (context, model, child) {
         return MaterialApp(
-          theme: theme.theme,
+          theme: model.theme.theme,
           routes: {
             '/': (ctx) => const BottomNavBar(),
             '/editor': (ctx) => const EditQueueScreen(),
@@ -44,25 +44,6 @@ class MyApp extends StatelessWidget {
           },
         );
       }),
-    );
-  }
-
-  // TODO make all these configurable
-  ThemeData customTheme() {
-    return ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color.fromARGB(255, 255, 189, 89),
-        surface: const Color.fromARGB(255, 64, 55, 52),
-        onSurface: Colors.white,
-        background: const Color.fromARGB(255, 255, 247, 207),
-        brightness: Brightness.light,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color.fromARGB(255, 255, 235, 150),
-        foregroundColor: Colors.black,
-      ),
-      primaryColor: const Color.fromARGB(255, 255, 189, 89),
-      useMaterial3: true,
     );
   }
 }
@@ -111,6 +92,16 @@ class _BottomNavBarState extends State<BottomNavBar>
     pageController = PageController(initialPage: _tabIndex);
   }
 
+  Icon icon(IconData iconData, bool isActive) {
+    return Icon(
+      iconData,
+      color: isActive
+          ? Theme.of(context).colorScheme.onSurface
+          : Theme.of(context).colorScheme.onSurfaceVariant,
+      size: 35,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,21 +123,19 @@ class _BottomNavBarState extends State<BottomNavBar>
       floatingActionButton: _tabIndex != 0 ? null : const AddQueueBtn(),
       bottomNavigationBar: CircleNavBar(
         activeIcons: [
-          Icon(Icons.home_outlined,
-              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
-          Icon(Icons.qr_code_sharp,
-              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
-          Icon(Icons.settings_outlined,
-              color: Theme.of(context).colorScheme.onInverseSurface, size: 35),
+          icon(Icons.home_outlined, true),
+          icon(Icons.qr_code_sharp, true),
+          icon(Icons.settings_outlined, true),
         ],
-        inactiveIcons: const [
-          Icon(Icons.home_outlined, size: 35),
-          Icon(Icons.qr_code_sharp, size: 35),
-          Icon(Icons.settings_outlined, size: 35),
+        inactiveIcons: [
+          icon(Icons.home_outlined, false),
+          icon(Icons.qr_code_sharp, false),
+          icon(Icons.settings_outlined, false),
         ],
-        color: Theme.of(context).colorScheme.primaryContainer,
-        circleColor: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        circleColor: Theme.of(context).colorScheme.surface,
         circleShadowColor: Theme.of(context).colorScheme.onSurface,
+        shadowColor: Theme.of(context).colorScheme.onSurface,
         elevation: 10,
         height: 90,
         circleWidth: 70,

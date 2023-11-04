@@ -13,7 +13,7 @@ class ServiceCard extends StatelessWidget {
         vertical: 5,
         horizontal: 25,
       ),
-      color: Theme.of(context).colorScheme.surfaceTint,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(40.0),
       ),
@@ -26,7 +26,7 @@ class ServiceCard extends StatelessWidget {
               iconName,
               style: TextStyle(
                 fontFamily: "MaterialIcons",
-                color: Theme.of(context).colorScheme.onPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 48,
               ),
             ),

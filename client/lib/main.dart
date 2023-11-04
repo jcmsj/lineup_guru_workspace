@@ -29,34 +29,15 @@ class MyApp extends StatelessWidget {
           create: (ctx) => ServerUrlNotifier(),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => ThemeNotifier(),
+          create: (ctx) => AppThemeNotifier(),
         ),
       ],
-      child: Consumer<ThemeNotifier>(builder: (context, theme, child) {
+      child: Consumer<AppThemeNotifier>(builder: (context, model, child) {
         return MaterialApp(
-          theme: theme.theme,
+          theme: model.theme.theme,
           home: const BottomNavBar(),
         );
       }),
-    );
-  }
-
-  ThemeData customTheme() {
-    return ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFFFBD59),
-        // surface: const Color(0xFF403734),
-        // onSurface: Colors.white,
-        // background: const Color(0xFFFFF7CF),
-        brightness: Brightness.light,
-      ),
-      // appBarTheme: const AppBarTheme(
-      //   backgroundColor: Color(0xFFFFEB96),
-      //   foregroundColor: Colors.black,
-      // ),
-      // primaryColor: const Color.fromARGB(255, 255, 189, 89),
-      // primaryColorLight: const Color(0xFFFFBD59),
-      useMaterial3: true,
     );
   }
 }
@@ -105,12 +86,11 @@ class _BottomNavBarState extends State<BottomNavBar>
   }
 
   Icon icon(IconData iconData, bool isActive) {
-    final appBarTheme = Theme.of(context).appBarTheme;
     return Icon(
       iconData,
       color: isActive
-          ? Theme.of(context).colorScheme.surface
-          : appBarTheme.foregroundColor,
+          ? Theme.of(context).colorScheme.onSurface
+          : Theme.of(context).colorScheme.onSurfaceVariant,
       size: 35,
     );
   }
@@ -144,8 +124,8 @@ class _BottomNavBarState extends State<BottomNavBar>
           icon(Icons.qr_code_sharp, false),
           icon(Icons.settings_outlined, false),
         ],
-        color: Theme.of(context).colorScheme.primaryContainer,
-        circleColor: Theme.of(context).colorScheme.onBackground,
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        circleColor: Theme.of(context).colorScheme.surface,
         circleShadowColor: Theme.of(context).colorScheme.onSurface,
         shadowColor: Theme.of(context).colorScheme.onSurface,
         elevation: 5,

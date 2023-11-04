@@ -24,6 +24,7 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
         if (queueNotifier.activeQueueId != queueNotifier.queue?.id) {
           return FloatingActionButton.extended(
             onPressed: () {},
+            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
             label: const Text("You are in a different queue"),
             icon: const Icon(Icons.warning),
           );
@@ -51,6 +52,7 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
               queueNotifier.queue!.name,
             );
           },
+          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
           label: const Text("Join Queue"),
           icon: const Icon(Icons.add));
     });
@@ -96,6 +98,7 @@ class _SecondRouteState extends State<SecondRoute> {
         appBar: AppBar(
           title: const Text("Queue  Details"),
           backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+          foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         floatingActionButton: const JoinOrQRFab(),
         body: Center(

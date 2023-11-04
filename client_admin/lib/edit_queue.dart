@@ -25,6 +25,11 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     super.initState();
     // set the queue name and current number from the queueNotifier
     final queueNotifier = Provider.of<QueueNotifier>(context, listen: false);
+    // TODO: Prevent navigating here if queue is null
+    if (queueNotifier.queue == null) {
+      return;
+    }
+
     _queueNameController.text = queueNotifier.queue!.name;
     _iconNameController.text =
         queueNotifier.queue!.iconName; // set the icon name controller
@@ -74,6 +79,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           appBar: AppBar(
             title: const Text('Edit Queue'),
             backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           floatingActionButton: saveBtn(),
           body: Padding(
@@ -86,6 +92,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
                 space(),
                 text("Icon name:"), // add the icon name text field
                 inputIconName(),
+                space(),
                 seeAvailable(),
                 text("Preview:"),
                 Row(
@@ -117,19 +124,26 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   }
 
   TextButton deleteBtn(
-      QueueNotifier model, ServerUrlNotifier server, BuildContext context) {
+    QueueNotifier model,
+    ServerUrlNotifier server,
+    BuildContext context,
+  ) {
     return TextButton.icon(
         onPressed: () {
-          if (model.queue == null) {
-            return;
-          }
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text("Confirm Delete"),
+                title: Text("Confirm Delete",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )),
                 content: Text(
-                    "Are you sure you want to delete this queue '${model.queue!.name}'?"),
+                  "Are you sure you want to delete this queue '${model.queue!.name}'?",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -203,8 +217,13 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         previousNumberBtn(context),
-        Text('$_queueCurrent',
-            style: Theme.of(context).textTheme.headlineLarge!),
+        Text(
+          '$_queueCurrent',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+          ),
+        ),
         nextNumberBtn(context),
       ],
     );
@@ -213,12 +232,15 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   // add the inputIconName method
   TextField inputIconName() {
     return TextField(
-        style: const TextStyle(color: Colors.black),
-        controller: _iconNameController,
-        decoration: const InputDecoration(
-          hintText: 'Enter icon name',
-        ),
-        onChanged: forceRebuild);
+      controller: _iconNameController,
+      decoration: const InputDecoration(
+        hintText: 'Enter icon name',
+      ),
+      onChanged: forceRebuild,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
   }
 
   ElevatedButton previousNumberBtn(BuildContext context) {
@@ -228,7 +250,10 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           _queueCurrent--;
         });
       },
-      child: const Icon(Icons.remove),
+      child: Icon(
+        Icons.remove,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
     );
   }
 
@@ -239,7 +264,10 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           _queueCurrent++;
         });
       },
-      child: const Icon(Icons.add),
+      child: Icon(
+        Icons.add,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
     );
   }
 
@@ -270,6 +298,8 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
         onPressed: updateQueue,
         label: const Text('Save'),
         icon: const Icon(Icons.save),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       );
     });
   }

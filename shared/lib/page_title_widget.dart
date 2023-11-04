@@ -19,6 +19,7 @@ class PageTitleState extends State<PageTitleWidget> {
             widget.title,
             style: TextStyle(
               fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8.0),

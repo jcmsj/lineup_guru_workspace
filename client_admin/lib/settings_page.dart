@@ -13,7 +13,10 @@ class SettingsPage extends StatelessWidget {
           children: <Widget>[
             _Item(
               child: ListTile(
-                leading: const Icon(Icons.brush_outlined),
+                leading: Icon(
+                  Icons.brush_outlined,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 title: const Text("App Theme"),
                 onTap: () {
                   Navigator.pushNamed(context, "/theme-editor");

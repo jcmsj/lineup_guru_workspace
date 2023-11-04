@@ -7,16 +7,21 @@ class LoadingQueueWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CircularProgressIndicator(
           strokeWidth: 8.0,
-          color: Color.fromARGB(255, 255, 189, 89),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        SizedBox(height: 20),
-        Text('Loading Queues...'),
+        const SizedBox(height: 20),
+        Text(
+          'Loading Queues...',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surfaceVariant,
+          ),
+        ),
       ],
     );
   }

@@ -31,7 +31,9 @@ class QRScreen extends StatelessWidget {
             const SizedBox(height: 20.0),
             Text(
               shopQueue.name,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ),
@@ -63,8 +65,12 @@ class QRServerScreen extends StatelessWidget {
                 size: 200.0,
               ),
               const SizedBox(height: 20.0),
-              Text(model.serverUrl,
-                  style: Theme.of(context).textTheme.bodyLarge!),
+              Text(
+                model.serverUrl,
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
             ],
           );
         }),

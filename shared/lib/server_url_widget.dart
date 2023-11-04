@@ -57,10 +57,6 @@ class _ServerUrlState extends State<ServerUrlWidget> {
       textAlign: TextAlign.center,
       decoration: const InputDecoration(
           floatingLabelAlignment: FloatingLabelAlignment.center,
-          hintStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 25,
-          ),
           hintText: 'Enter server Url'),
     );
   }

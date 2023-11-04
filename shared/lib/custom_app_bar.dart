@@ -17,11 +17,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Icon(Icons.qr_code),
+            Icon(
+              Icons.qr_code,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 10),
             Text(
               title,
-              style: const TextStyle(fontSize: 25),
+              style: TextStyle(
+                fontSize: 25,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

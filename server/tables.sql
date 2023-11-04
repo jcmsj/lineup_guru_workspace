@@ -7,7 +7,17 @@ CREATE TABLE IF NOT EXISTS queue (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- INSERT INTO queue (
+CREATE TABLE IF NOT EXISTS theme(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    seed VARCHAR(8) NOT NULL,
+    brightness VARCHAR(16) NOT NULL,
+    appBackground VARCHAR(8) NOT NULL,
+    appBarBackground VARCHAR(8) NOT NULL,
+    appBarForeground VARCHAR(8) NOT NULL,
+    queueItemBackground VARCHAR(8) NOT NULL,
+    queueItemForeground VARCHAR(8) NOT NULL
+);
+-- REPLACE INTO queue (
 --     name, 
 --     current, 
 --     last_position, 

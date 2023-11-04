@@ -17,6 +17,9 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->get("/ping", function() {
         echo "pong";
     });
+    // Create routes for receiving a GET and POST request at /theme
+    $r->get('/theme', 'getTheme');
+    $r->post('/theme', 'setTheme');
 });
 
 $db = new SQLite3('queue.sqlite');
@@ -160,3 +163,57 @@ function echo_json(mixed $json) {
     echo json_encode($json);
 }
 
+function getTheme($db) {
+    // query the first record in the theme table
+    // return the result as json
+    $id=0;
+    $sql = 'SELECT * FROM theme WHERE id=:id';
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam(':id', $id);
+    $result = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    echo json_encode(array(
+        'id' => $result['id'],
+        'seed' => $result['seed'],
+        'brightness' => $result['brightness'],
+        'appBackground' => $result['appBackground'],
+
+        'appBar' => array(
+            'background' => $result['appBarBackground'],
+            'foreground' => $result['appBarForeground'],
+        ),
+        'queueItem' => array(
+            'background' => $result['queueItemBackground'],
+            'foreground' => $result['queueItemForeground'],
+        ),
+    ));
+
+}
+// function getStyle($db, $vars) {
+//     $sql = 'SELECT id, name FROM style WHERE name IN ("app.bg", "appBarColor.fg", "appBarColor.bg", "queueItemColor.bg", "queueItemColor.fg", "seed", "brightness")';
+//     $stmt = $db->prepare($sql);
+//     $result = $stmt->execute();
+//     // $rows = array();
+//     // while ($row = ) {
+//     //     $rows[$row] = $row;
+//     // }
+
+//     echo_json($result->fetchArray(SQLITE3_ASSOC));
+// }
+
+function setTheme($db, $vars) {
+    $theme = json_decode($_POST['theme'], true);
+    // file_put_contents('theme.json', json_encode($theme, JSON_PRETTY_PRINT));
+    // Create a replace into stmt for the theme @ id =0
+    $sql = 'REPLACE INTO theme (id, seed, brightness, appBackground, appBarBackground, appBarForeground, queueItemBackground, queueItemForeground) VALUES (:id, :seed, :brightness, :appBackground, :appBarBackground, :appBarForeground, :queueItemBackground, :queueItemForeground)';
+    $stmt = $db->prepare($sql);
+    $id = 0;
+    $stmt->bindParam(':id', $id);
+    $stmt->bindParam(':seed', $theme['seed']);
+    $stmt->bindParam(':brightness', $theme['brightness']);
+    $stmt->bindParam(':appBackground', $theme['appBackground']);
+    $stmt->bindParam(':appBarBackground', $theme['appBar']['background']);
+    $stmt->bindParam(':appBarForeground', $theme['appBar']['foreground']);
+    $stmt->bindParam(':queueItemBackground', $theme['queueItem']['background']);
+    $stmt->bindParam(':queueItemForeground', $theme['queueItem']['foreground']);
+    $stmt->execute();
+}
