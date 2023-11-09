@@ -266,6 +266,8 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
     _seedController.dispose();
     _appBarFgController.dispose();
     _appBarBgController.dispose();
+    _queueItemFgController.dispose();
+    _queueItemBgController.dispose();
     _appBgController.dispose();
     super.dispose();
   }
