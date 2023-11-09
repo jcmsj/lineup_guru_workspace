@@ -10,12 +10,15 @@ class ServerUrlNotifier extends ChangeNotifier {
   String get serverUrl => _serverUrl;
 
   set serverUrl(String url) {
-    _serverUrl = url;
+    //Important: Strip trailing slash
+    _serverUrl = url.replaceAll(RegExp("/\$"), "");
     notifyListeners();
   }
 
   Future<void> tryCandidate(String serverCandidate) async {
     log("pinging $serverCandidate");
+    // strip the trailing slash
+    serverCandidate = serverCandidate.replaceAll(RegExp("/\$"), "");
     final uri = Uri.parse(serverCandidate);
     final response = await http.get(Uri.parse("$uri/ping"));
     if (response.body == "pong") {

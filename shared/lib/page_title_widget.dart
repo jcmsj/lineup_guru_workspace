@@ -11,6 +11,11 @@ class PageTitleWidget extends StatefulWidget {
 class PageTitleState extends State<PageTitleWidget> {
   @override
   Widget build(BuildContext context) {
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+    final bg = Theme.of(context).colorScheme.background;
+    final titleColor = onSurfaceVariant == bg
+        ? Theme.of(context).colorScheme.inverseSurface
+        : onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(30),
       child: Column(
@@ -19,7 +24,7 @@ class PageTitleState extends State<PageTitleWidget> {
             widget.title,
             style: TextStyle(
               fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 8.0),

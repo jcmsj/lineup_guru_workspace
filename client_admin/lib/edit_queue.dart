@@ -217,11 +217,16 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         previousNumberBtn(context),
-        Text(
-          '$_queueCurrent',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '$_queueCurrent',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+              ),
+            ),
           ),
         ),
         nextNumberBtn(context),
@@ -236,10 +241,10 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       decoration: const InputDecoration(
         hintText: 'Enter icon name',
       ),
-      onChanged: forceRebuild,
       style: TextStyle(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: Theme.of(context).colorScheme.onBackground,
       ),
+      onChanged: forceRebuild,
     );
   }
 
@@ -273,7 +278,9 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
 
   TextField inputQueueName() {
     return TextField(
-        style: const TextStyle(color: Colors.black),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onBackground,
+        ),
         controller: _queueNameController,
         decoration: const InputDecoration(
           hintText: 'Enter queue name',

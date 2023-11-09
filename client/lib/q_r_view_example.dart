@@ -35,7 +35,11 @@ class _QRViewExampleState extends State<QRViewExample> {
         onPressed: () {
           controller!.resumeCamera();
         },
-        child: const Icon(Icons.restart_alt),
+        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        child: Icon(
+          Icons.restart_alt,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
       body: Column(
         children: <Widget>[
@@ -57,7 +61,7 @@ class _QRViewExampleState extends State<QRViewExample> {
       key: qrKey,
       onQRViewCreated: _onQRViewCreated,
       overlay: QrScannerOverlayShape(
-          borderColor: Colors.orange,
+          borderColor: Theme.of(context).colorScheme.surfaceVariant,
           borderRadius: 20,
           borderLength: 40,
           borderWidth: 10,

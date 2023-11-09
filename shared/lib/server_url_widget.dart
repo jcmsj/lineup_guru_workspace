@@ -43,7 +43,7 @@ class _ServerUrlState extends State<ServerUrlWidget> {
   void didChangeDependencies() {
     textFieldCtl.text = Provider.of<ServerUrlNotifier>(
       context,
-      listen: true, // Be sure to listen
+      listen: false, // Be sure to listen
     ).serverUrl;
     super.didChangeDependencies();
   }

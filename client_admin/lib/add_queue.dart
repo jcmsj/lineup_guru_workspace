@@ -29,7 +29,11 @@ class AddQueueBtn extends StatelessWidget {
           });
         });
       },
-      child: const Icon(Icons.add),
+      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+      child: Icon(
+        Icons.add,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     );
   }
 }

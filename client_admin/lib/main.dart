@@ -89,6 +89,7 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   void initState() {
     super.initState();
+    AppThemeNotifier.of(context).fetch(context);
     pageController = PageController(initialPage: _tabIndex);
   }
 

@@ -26,19 +26,14 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
             onPressed: () {},
             backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
             label: const Text("You are in a different queue"),
-            icon: const Icon(Icons.warning),
+            icon: Icon(
+              Icons.warning,
+            ),
           );
         } else {
           return const Text("");
         }
       }
-      // } else if (queueNotifier.myNumber > 0) {
-      //   return FloatingActionButton.extended(
-      //     onPressed: () {},
-      //     label: const Text("Show QR Code"),
-      //     icon: const Icon(Icons.qr_code),
-      //   );
-      // }
 
       return FloatingActionButton.extended(
           disabledElevation: 0,
@@ -53,8 +48,16 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
             );
           },
           backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-          label: const Text("Join Queue"),
-          icon: const Icon(Icons.add));
+          label: Text(
+            "Join Queue",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          icon: Icon(
+            Icons.add,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ));
     });
   }
 }

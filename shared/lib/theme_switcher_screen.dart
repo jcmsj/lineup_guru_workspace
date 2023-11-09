@@ -105,7 +105,7 @@ class AppTheme {
 
   // Create a fetch and submit method for the AppTheme
   Future<http.Response> submit(String url) {
-    print(jsonEncode(toJson()));
+    // print(jsonEncode(toJson()));
 
     return http.post(
       Uri.parse("$url/theme"),
@@ -183,6 +183,10 @@ class AppThemeNotifier extends ChangeNotifier {
     }
   }
 
+  static AppThemeNotifier of(BuildContext context, {bool listen = false}) {
+    return Provider.of<AppThemeNotifier>(context, listen: listen);
+  }
+
   void snap() {
     snapshot = theme.copyWith();
   }
@@ -247,6 +251,15 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
   @override
   void initState() {
     super.initState();
+    // sync when ServerUrl changes
+    // Provider.of<ServerUrlNotifier>(
+    //   context,
+    //   listen: false,
+    // ).addListener(fetchAndSync);
+    sync();
+  }
+
+  void sync() {
     final theme = widget.themeNotifier.theme;
     _seedController = TextEditingController(text: theme.seed.toRadixString(16));
     _appBgController = TextEditingController(
@@ -259,6 +272,12 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
         text: theme.queueItem.foreground.value.toRadixString(16));
     _queueItemBgController = TextEditingController(
         text: theme.queueItem.background.value.toRadixString(16));
+  }
+
+  void fetchAndSync() {
+    widget.themeNotifier.fetch(context).then((value) {
+      sync();
+    });
   }
 
   @override
@@ -281,10 +300,8 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
           controller: _appBgController,
           label: "Background Color",
           onChange: (color) {
-            widget.themeNotifier.theme = widget.themeNotifier.theme.copyWith(
-                appBackground: color,
-                appBar: widget.themeNotifier.theme.appBar
-                    .copyWith(background: color));
+            widget.themeNotifier.theme =
+                widget.themeNotifier.theme.copyWith(appBackground: color);
           },
         ),
         ColorField(
@@ -296,7 +313,7 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
         SwitchListTile(
           title: Text('Dark Mode',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.surface,
               )),
           value: Brightness.dark == widget.themeNotifier.theme.brightness,
           onChanged: (value) {
@@ -340,6 +357,15 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
                 queueItem: widget.themeNotifier.theme.queueItem
                     .copyWith(background: color));
           },
+        ),
+
+        // Add a button to fetch server's theme
+        FloatingActionButton.extended(
+          onPressed: fetchAndSync,
+          label: Text("Sync from Server",
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
         )
       ],
     );
@@ -353,7 +379,7 @@ class _AppThemeEditorState extends State<AppThemeEditor> {
           Text(
             title,
             style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.inverseSurface,
                 ),
           ),
         ],
@@ -382,7 +408,7 @@ class ColorField extends StatelessWidget {
       child: TextField(
         controller: controller,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: Theme.of(context).colorScheme.inverseSurface,
         ),
         decoration: InputDecoration(
           icon: Icon(
@@ -392,6 +418,9 @@ class ColorField extends StatelessWidget {
             ),
           ),
           labelText: label,
+          labelStyle: TextStyle(
+            color: Theme.of(context).colorScheme.inverseSurface,
+          ),
           focusColor: Theme.of(context).colorScheme.surfaceVariant,
           border: const OutlineInputBorder(),
         ),
@@ -417,11 +446,19 @@ class ThemeSwitcherScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.save),
+        icon: Icon(
+          Icons.save,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         onPressed: () {
           Provider.of<AppThemeNotifier>(context, listen: false).submit(context);
         },
-        label: const Text("Save"),
+        label: Text(
+          "Save",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
         backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
       ),
       body: Center(
