@@ -134,6 +134,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
+                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                 title: Text("Confirm Delete",
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -173,7 +174,12 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
                           },
                         );
                       },
-                      child: const Text("Delete"))
+                      child: Text(
+                        "Delete",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ))
                 ],
               );
             },
