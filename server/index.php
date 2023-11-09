@@ -1,7 +1,7 @@
 <?php
 require './vendor/autoload.php';
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
 header("Access-Control-Allow-Headers: X-Requested-With");
 //  Read https://github.com/nikic/FastRoute
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
@@ -200,13 +200,13 @@ function getTheme($db) {
 //     echo_json($result->fetchArray(SQLITE3_ASSOC));
 // }
 
-function setTheme($db, $vars) {
+function setTheme($db) {
     $theme = json_decode($_POST['theme'], true);
-    // file_put_contents('theme.json', json_encode($theme, JSON_PRETTY_PRINT));
+    file_put_contents('theme.json', json_encode($theme, JSON_PRETTY_PRINT));
     // Create a replace into stmt for the theme @ id =0
     $sql = 'REPLACE INTO theme (id, seed, brightness, appBackground, appBarBackground, appBarForeground, queueItemBackground, queueItemForeground) VALUES (:id, :seed, :brightness, :appBackground, :appBarBackground, :appBarForeground, :queueItemBackground, :queueItemForeground)';
     $stmt = $db->prepare($sql);
-    $id = 0;
+    $id = "0";
     $stmt->bindParam(':id', $id);
     $stmt->bindParam(':seed', $theme['seed']);
     $stmt->bindParam(':brightness', $theme['brightness']);
