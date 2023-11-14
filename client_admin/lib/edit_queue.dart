@@ -89,8 +89,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
           floatingActionButton: saveBtn(),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView(
               children: [
                 text("Queue name:"),
                 inputQueueName(),
@@ -121,7 +120,12 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
                 space(),
                 positionControls(context),
                 space(),
-                deleteBtn(model, server, context),
+                ButtonBar(
+                  alignment: MainAxisAlignment.center,
+                  children: [
+                    deleteBtn(model, server, context),
+                  ],
+                )
               ],
             ),
           ),
