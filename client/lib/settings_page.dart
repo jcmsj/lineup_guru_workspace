@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/server_url_widget.dart';
-import 'package:shared/theme_switcher_screen.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/notifier.dart';
+import 'package:shared/settings_item.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -24,16 +26,32 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _Item(child: ServerUrlWidget()),
-            SizedBox(height: 50.0),
-            _Item(
+            SettingsItem(
+              child: ListTile(
+                leading: Icon(
+                  Icons.cloud,
+                  color: Surface.fg(context),
+                ),
+                title: const Text(
+                  "Server URL",
+                  textAlign: TextAlign.center,
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return const ServerUrlScreen();
+                  }));
+                },
+              ),
+            ),
+            const VertSpace(),
+            const SettingsItem(
               child: Text(
                 "Manual",
                 style: TextStyle(fontSize: 25),
               ),
             ),
-            SizedBox(height: 50.0),
-            _Item(
+            const VertSpace(),
+            SettingsItem(
               child: TextButton(
                 onPressed: () {
                   Provider.of<AppThemeNotifier>(context, listen: false)
@@ -46,33 +64,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            SizedBox(height: 50.0),
-            _Item(
+            const VertSpace(),
+            const SettingsItem(
               child: Text(
                 "About Us",
                 style: TextStyle(fontSize: 25),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Item extends StatelessWidget {
-  final Widget child;
-
-  const _Item({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 60,
-      width: 250,
-      child: Card(
-        child: Center(
-          child: child,
         ),
       ),
     );

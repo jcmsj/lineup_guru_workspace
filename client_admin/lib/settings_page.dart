@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared/server_url_widget.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/settings_item.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -11,54 +12,52 @@ class SettingsPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _Item(
+            SettingsItem(
               child: ListTile(
                 leading: Icon(
                   Icons.brush_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Surface.fg(context),
                 ),
-                title: const Text("App Theme"),
+                title: const Text(
+                  "App Theme",
+                  textAlign: TextAlign.center,
+                ),
                 onTap: () {
                   Navigator.pushNamed(context, "/theme-editor");
                 },
               ),
             ),
-            const SizedBox(height: 50.0),
-            const _Item(
+            const VertSpace(),
+            const SettingsItem(
               child: Text(
                 "Manual",
                 style: TextStyle(fontSize: 25),
               ),
             ),
-            const SizedBox(height: 50.0),
-            const _Item(child: ServerUrlWidget()),
-            const SizedBox(height: 50.0),
-            const _Item(
+            const VertSpace(),
+            SettingsItem(
+              child: ListTile(
+                leading: Icon(
+                  Icons.cloud,
+                  color: Surface.fg(context),
+                ),
+                title: const Text(
+                  "Server URL",
+                  textAlign: TextAlign.center,
+                ),
+                onTap: () {
+                  Navigator.pushNamed(context, "/server-url");
+                },
+              ),
+            ),
+            const VertSpace(),
+            const SettingsItem(
               child: Text(
                 "About Us",
                 style: TextStyle(fontSize: 25),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Item extends StatelessWidget {
-  final Widget child;
-
-  const _Item({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 60,
-      width: 250,
-      child: Card(
-        child: Center(
-          child: child,
         ),
       ),
     );

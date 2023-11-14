@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared/page_title_widget.dart';
-import 'package:shared/queue_notifier.dart';
+import 'package:shared/queue/notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/server_url_notifier.dart';
+import 'package:shared/settings_item.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/themed_bar.dart';
 
 class JoinOrQRFab extends StatefulWidget {
   const JoinOrQRFab({super.key});
@@ -24,11 +27,9 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
         if (queueNotifier.activeQueueId != queueNotifier.queue?.id) {
           return FloatingActionButton.extended(
             onPressed: () {},
-            backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+            backgroundColor: SurfaceVariant.bg(context),
             label: const Text("You are in a different queue"),
-            icon: Icon(
-              Icons.warning,
-            ),
+            icon: Icon(Icons.warning, color: SurfaceVariant.fg(context)),
           );
         } else {
           return const Text("");
@@ -64,14 +65,14 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
 
 // Create a State class that contains the ShopQueue field
 // class _SecondRouteState extends State<SecondRoute> {
-class SecondRoute extends StatefulWidget {
-  const SecondRoute({super.key});
+class QueueView extends StatefulWidget {
+  const QueueView({super.key});
 
   @override
-  State<SecondRoute> createState() => _SecondRouteState();
+  State<QueueView> createState() => _QueueViewState();
 }
 
-class _SecondRouteState extends State<SecondRoute> {
+class _QueueViewState extends State<QueueView> {
   // Poll server for latest queue every 2 seconds
   late Timer _timer;
 
@@ -98,21 +99,20 @@ class _SecondRouteState extends State<SecondRoute> {
     return Consumer2<QueueNotifier, ServerUrlNotifier>(
         builder: (context, queueNotifier, serverUrlNotifier, child) {
       return Scaffold(
-        appBar: AppBar(
+        appBar: ThemedBar(
+          context: context,
           title: const Text("Queue  Details"),
-          backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-          foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         floatingActionButton: const JoinOrQRFab(),
         body: Center(
           child: Column(
             children: [
               PageTitleWidget(title: "Queue: ${queueNotifier.queue?.name}"),
-              const SizedBox(height: 20),
+              const VertSpace(),
               currentlyServing(queueNotifier),
-              const SizedBox(height: 20),
+              const VertSpace(),
               lastNumber(queueNotifier),
-              const SizedBox(height: 20),
+              const VertSpace(),
               queueNotifier.activeQueueId == queueNotifier.queue?.id
                   ? customerStatus(queueNotifier)
                   : const Text(""),

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared/save_fab.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/themed_bar.dart';
 
 import 'server_url_notifier.dart';
 
-class ServerUrlWidget extends StatefulWidget {
-  const ServerUrlWidget({super.key});
+class ServerUrlScreen extends StatefulWidget {
+  const ServerUrlScreen({super.key});
 
   @override
-  State<ServerUrlWidget> createState() => _ServerUrlState();
+  State<ServerUrlScreen> createState() => _ServerUrlScreenState();
 }
 
-// Define a corresponding State class.
-// This class holds data related to the Form.
-class _ServerUrlState extends State<ServerUrlWidget> {
-  // Create a text controller. Later, use it to retrieve the
-  // current value of the TextField.
+class _ServerUrlScreenState extends State<ServerUrlScreen> {
   final textFieldCtl = TextEditingController();
 
   @override
@@ -27,16 +26,9 @@ class _ServerUrlState extends State<ServerUrlWidget> {
   @override
   void initState() {
     super.initState();
-
-    // Start listening to changes.
-    textFieldCtl.addListener(syncNotifier);
-  }
-
-  void syncNotifier() {
-    Provider.of<ServerUrlNotifier>(
-      context,
-      listen: false, // No need to listen
-    ).serverUrl = textFieldCtl.text;
+    textFieldCtl.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -48,16 +40,80 @@ class _ServerUrlState extends State<ServerUrlWidget> {
     super.didChangeDependencies();
   }
 
+  void syncToServer() {
+    Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl =
+        textFieldCtl.text;
+    Navigator.pop(context);
+  }
+
+  Widget? showSaveFABOrNull(String serverUrl) {
+    if (serverUrl != textFieldCtl.text) {
+      return SaveFAB(onPressed: syncToServer);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: textFieldCtl,
-      style: const TextStyle(fontSize: 12),
-      textAlignVertical: TextAlignVertical.center,
-      textAlign: TextAlign.center,
-      decoration: const InputDecoration(
-          floatingLabelAlignment: FloatingLabelAlignment.center,
-          hintText: 'Enter server Url'),
-    );
+    return Consumer<ServerUrlNotifier>(builder: (context, model, child) {
+      return Scaffold(
+        appBar: ThemedBar(
+          context: context,
+          title: const Text('Server Url'),
+        ),
+        // If the server url does not match the controller text, then show SaveFAB
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              // 3/4 of screen width
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.75,
+                // TextField with outline that is styled to use the theme's colors
+                child: TextField(
+                  controller: textFieldCtl,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: SurfaceVariant.bg(context),
+                      ),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: 'Server Url',
+                    hoverColor: SurfaceVariant.bg(context),
+                    labelStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: SurfaceVariant.bg(context),
+                        ),
+                  ),
+                ),
+              ),
+              ButtonBar(
+                alignment: MainAxisAlignment.center,
+                children: textFieldCtl.text == model.serverUrl
+                    ? []
+                    : [
+                        TextButton.icon(
+                          icon: const Icon(Icons.restore),
+                          onPressed: () {
+                            textFieldCtl.text = model.serverUrl;
+                          },
+                          label: const Text("Reset"),
+                        ),
+                        TextButton.icon(
+                          style: ButtonStyle(
+                            foregroundColor: MaterialStateProperty.all<Color>(
+                                SurfaceVariant.fg(context)),
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                SurfaceVariant.bg(context)),
+                          ),
+                          icon: const Icon(Icons.save),
+                          onPressed: syncToServer,
+                          label: const Text("Save"),
+                        ),
+                      ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }

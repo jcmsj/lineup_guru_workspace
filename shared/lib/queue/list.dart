@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'server_url_notifier.dart';
+import '../service_card.dart';
+import '/theme/app_theme.dart';
+import '/server_url_notifier.dart';
 import 'shop_queue.dart';
 
 // ignore: non_constant_identifier_names
 Future<List<ShopQueue>> fetchQueues(String url) async {
   final response = await http.get(Uri.parse('$url/queue'));
-  print(response.body);
   if (response.statusCode == 200) {
     // Do something with the response body
     return jsonDecode(response.body)
@@ -46,6 +47,7 @@ class QueueBuilder extends StatefulWidget {
 class _QueueBuilderState extends State<QueueBuilder> {
   Future<List<ShopQueue>> _future = Future.value([]);
   late Timer timer;
+  final int intervalMs = 3000;
   @override
   void initState() {
     super.initState();
@@ -54,7 +56,7 @@ class _QueueBuilderState extends State<QueueBuilder> {
   }
 
   setUpTimedFetch() {
-    timer = Timer.periodic(const Duration(milliseconds: 3000), (timer) {
+    timer = Timer.periodic(Duration(milliseconds: intervalMs), (timer) {
       getQueues();
     });
   }
@@ -78,26 +80,35 @@ class _QueueBuilderState extends State<QueueBuilder> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ShopQueue>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            List<ShopQueue>? data = snapshot.data;
-            return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 40,
-                  crossAxisSpacing: 0,
-                ),
-                itemCount: data!.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return widget.builder(data[index]);
-                });
-          } else if (snapshot.hasError) {
-            return Text("${snapshot.error}");
-          }
-          return const LoadingQueueWidget();
-        });
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FutureBuilder<List<ShopQueue>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<ShopQueue>? data = snapshot.data;
+              return GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    // If the height is <= width then make cross axis count 4 else 2
+                    crossAxisCount: MediaQuery.of(context).size.height <=
+                            MediaQuery.of(context).size.width
+                        ? 4
+                        : 2,
+
+                    // main axis spacing 1/10 of screenw idth
+                    mainAxisSpacing: MediaQuery.of(context).size.width * 0.05,
+                    crossAxisSpacing: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                  itemCount: data!.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return widget.builder(data[index]);
+                  });
+            } else if (snapshot.hasError) {
+              return Text("${snapshot.error}");
+            }
+            return const LoadingQueueWidget();
+          }),
+    );
   }
 }
 
@@ -113,16 +124,38 @@ class LoadingQueueWidget extends StatelessWidget {
       children: [
         CircularProgressIndicator(
           strokeWidth: 8.0,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: SurfaceVariant.fg(context),
         ),
-        const SizedBox(height: 25),
+        // Add a sized box that is 1/8 of the screen height
+        SizedBox(height: MediaQuery.of(context).size.height * 0.125),
         Text(
           'Loading Queues...',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: SurfaceVariant.fg(context),
           ),
         ),
       ],
+    );
+  }
+}
+
+class QueueItem extends StatelessWidget {
+  final void Function() onTap;
+
+  const QueueItem({
+    super.key,
+    required this.data,
+    required this.onTap,
+  });
+  final ShopQueue data;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ServiceCard(
+        data.name,
+        data.iconName,
+      ),
     );
   }
 }

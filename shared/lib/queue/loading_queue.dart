@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared/theme/app_theme.dart';
 
 class LoadingQueueWidget extends StatelessWidget {
   const LoadingQueueWidget({
@@ -13,13 +14,13 @@ class LoadingQueueWidget extends StatelessWidget {
       children: [
         CircularProgressIndicator(
           strokeWidth: 8.0,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: SurfaceVariant.fg(context),
         ),
         const SizedBox(height: 20),
         Text(
           'Loading Queues...',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: SurfaceVariant.fg(context),
           ),
         ),
       ],

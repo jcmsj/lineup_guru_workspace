@@ -1,9 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:shared/custom_app_bar.dart';
 import 'package:shared/server_url_notifier.dart';
-import 'package:shared/shop_queue.dart';
+import 'package:shared/queue/shop_queue.dart';
+import 'package:shared/theme/app_theme.dart';
 
 class QRScreen extends StatelessWidget {
   const QRScreen({super.key});
@@ -14,29 +16,24 @@ class QRScreen extends StatelessWidget {
     // see https://docs.flutter.dev/cookbook/navigation/navigate-with-arguments
     final shopQueue = ModalRoute.of(context)!.settings.arguments as ShopQueue;
 
-    return Scaffold(
-      appBar: const CustomAppBar(
-        height: 125,
-        title: "QR Scanner",
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            QrImageView(
-              data: shopQueue.name,
-              version: QrVersions.auto,
-              size: 200.0,
-            ),
-            const SizedBox(height: 20.0),
-            Text(
-              shopQueue.name,
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          QrImageView(
+            data: shopQueue.name,
+            version: QrVersions.auto,
+            // Use 1/2 of screen width as the size
+            size: MediaQuery.of(context).size.width * 0.5,
+          ),
+          const SizedBox(height: 20.0),
+          Text(
+            shopQueue.name,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -62,13 +59,14 @@ class QRServerScreen extends StatelessWidget {
               QrImageView(
                 data: model.serverUrl,
                 version: QrVersions.auto,
-                size: 200.0,
+                // Use 3/4 of screen width as the size
+                size: MediaQuery.of(context).size.width * 0.5,
               ),
               const SizedBox(height: 20.0),
               Text(
                 model.serverUrl,
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.surface,
+                      color: Surface.bg(context),
                     ),
               ),
             ],

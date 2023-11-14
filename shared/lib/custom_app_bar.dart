@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/themed_bar.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
@@ -10,24 +12,24 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: AppBar(
+      child: ThemedBar(
+        context: context,
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
         centerTitle: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Icon(
               Icons.qr_code,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: SurfaceVariant.fg(context),
             ),
             const SizedBox(width: 10),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 25,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              // make a style that us headline medium and uses SurfaceVariant.fg
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: SurfaceVariant.fg(context),
+                  ),
             ),
           ],
         ),

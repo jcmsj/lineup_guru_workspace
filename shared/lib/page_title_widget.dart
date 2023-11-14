@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared/theme/app_theme.dart';
 
 class PageTitleWidget extends StatefulWidget {
   final String title;
@@ -11,7 +12,7 @@ class PageTitleWidget extends StatefulWidget {
 class PageTitleState extends State<PageTitleWidget> {
   @override
   Widget build(BuildContext context) {
-    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+    final onSurfaceVariant = SurfaceVariant.fg(context);
     final bg = Theme.of(context).colorScheme.background;
     final titleColor = onSurfaceVariant == bg
         ? Theme.of(context).colorScheme.inverseSurface
@@ -30,8 +31,8 @@ class PageTitleState extends State<PageTitleWidget> {
           const SizedBox(height: 8.0),
           Container(
             height: 1.5,
-            width: 500,
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            width: MediaQuery.of(context).size.width * 0.75,
+            color: SurfaceVariant.bg(context),
           ),
         ],
       ),

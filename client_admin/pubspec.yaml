@@ -40,7 +40,6 @@ dependencies:
   http: ^1.1.0
   qr_code_scanner: ^1.0.1
   circle_nav_bar: ^2.0.1+1
-  fluttertoast: ^8.2.2
   url_launcher: ^6.2.1
   qr_flutter: ^4.1.0
 

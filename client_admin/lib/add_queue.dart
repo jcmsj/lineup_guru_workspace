@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared/queue_list.dart';
-import 'package:shared/queue_notifier.dart';
+import 'package:shared/queue/list.dart';
+import 'package:shared/queue/notifier.dart';
 import 'package:shared/server_url_notifier.dart';
 
 class AddQueueBtn extends StatelessWidget {

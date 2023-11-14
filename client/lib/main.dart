@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
-import 'package:lineup_guru_app/queue_list.dart';
+import 'package:lineup_guru_app/second_route.dart';
 import 'package:shared/page_title_widget.dart';
-import 'package:shared/queue_list.dart';
-import 'package:shared/queue_notifier.dart';
+import 'package:shared/queue/list.dart';
+import 'package:shared/queue/notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/server_url_notifier.dart';
-import 'package:shared/theme_switcher_screen.dart';
+import 'package:shared/theme/notifier.dart';
 import 'package:shared/custom_app_bar.dart';
-import 'q_r_view_example.dart';
+import 'qr_scanner.dart';
 import 'settings_page.dart';
 
 void main() {
@@ -52,7 +52,16 @@ class HomePage extends StatelessWidget {
         const PageTitleWidget(title: "Services"),
         Expanded(
           child: QueueBuilder(
-            builder: (queue) => QueueItem(data: queue),
+            builder: (queue) => QueueItem(
+                data: queue,
+                onTap: () {
+                  Provider.of<QueueNotifier>(context, listen: false).queue =
+                      queue;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const QueueView()),
+                  );
+                }),
           ),
         ),
       ],
@@ -110,7 +119,7 @@ class _BottomNavBarState extends State<BottomNavBar>
         },
         children: const [
           HomePage(),
-          QRViewExample(),
+          QRScanner(),
           SettingsPage(),
         ],
       ),

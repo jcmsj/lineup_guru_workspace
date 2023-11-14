@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/page_title_widget.dart';
-import 'package:shared/queue_list.dart';
-import 'package:shared/queue_notifier.dart';
+import 'package:shared/queue/list.dart';
+import 'package:shared/queue/notifier.dart';
 import 'package:shared/server_url_notifier.dart';
-import 'package:shared/shop_queue.dart';
+import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/custom_app_bar.dart';
-import 'package:shared/theme_switcher_screen.dart';
+import 'package:shared/server_url_widget.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/notifier.dart';
+import 'package:shared/theme/editor.dart';
 import 'qr_screen.dart';
-import 'queue_list.dart';
 import 'add_queue.dart';
 import 'edit_queue.dart';
 import 'settings_page.dart';
@@ -41,6 +43,7 @@ class MyApp extends StatelessWidget {
             '/editor': (ctx) => const EditQueueScreen(),
             '/qr': (ctx) => const QRScreen(),
             '/theme-editor': (ctx) => const ThemeSwitcherScreen(),
+            '/server-url': (ctx) => const ServerUrlScreen(),
           },
         );
       }),
@@ -59,7 +62,13 @@ class HomePage extends StatelessWidget {
         Expanded(
           child: QueueBuilder(
             // Todo: Responsive sizing in wide screens
-            builder: (ShopQueue queue) => QueueItem(data: queue),
+            builder: (ShopQueue queue) => QueueItem(
+                data: queue,
+                onTap: () {
+                  Provider.of<QueueNotifier>(context, listen: false).queue =
+                      queue;
+                  Navigator.pushNamed(context, "/editor");
+                }),
           ),
         ),
       ],
@@ -96,9 +105,7 @@ class _BottomNavBarState extends State<BottomNavBar>
   Icon icon(IconData iconData, bool isActive) {
     return Icon(
       iconData,
-      color: isActive
-          ? Theme.of(context).colorScheme.onSurface
-          : Theme.of(context).colorScheme.onSurfaceVariant,
+      color: isActive ? Surface.fg(context) : SurfaceVariant.fg(context),
       size: 35,
     );
   }
@@ -133,10 +140,10 @@ class _BottomNavBarState extends State<BottomNavBar>
           icon(Icons.qr_code_sharp, false),
           icon(Icons.settings_outlined, false),
         ],
-        color: Theme.of(context).colorScheme.surfaceVariant,
-        circleColor: Theme.of(context).colorScheme.surface,
-        circleShadowColor: Theme.of(context).colorScheme.onSurface,
-        shadowColor: Theme.of(context).colorScheme.onSurface,
+        color: SurfaceVariant.bg(context),
+        circleColor: Surface.bg(context),
+        circleShadowColor: Surface.fg(context),
+        shadowColor: Surface.fg(context),
         elevation: 10,
         height: 90,
         circleWidth: 70,

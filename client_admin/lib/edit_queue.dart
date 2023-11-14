@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared/queue_notifier.dart';
+import 'package:shared/queue/notifier.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/service_card.dart';
+import 'package:shared/theme/app_theme.dart';
+import 'package:shared/save_fab.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EditQueueScreen extends StatefulWidget {
@@ -16,6 +17,8 @@ class EditQueueScreen extends StatefulWidget {
 
 class _EditQueueScreenState extends State<EditQueueScreen> {
   final _queueNameController = TextEditingController();
+  final Uri iconLibrary = Uri.parse(
+      'https://api.flutter.dev/flutter/material/Icons-class.html#constants');
   final _iconNameController =
       TextEditingController(); // added icon name controller
   int _queueCurrent = 0;
@@ -60,14 +63,16 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   }
 
   void showSavedToast() {
-    Fluttertoast.showToast(
-        msg: "Queue has been updated",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Queue has been updated',
+          style: TextStyle(color: Surface.fg(context)),
+        ),
+        backgroundColor: Surface.bg(context),
+        showCloseIcon: true,
+      ),
+    );
   }
 
   @override
@@ -99,7 +104,9 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      width: 175,
+                      // height & width is 1/5 of shortest side
+                      height: MediaQuery.of(context).size.shortestSide * 0.4,
+                      width: MediaQuery.of(context).size.shortestSide * 0.4,
                       child: Expanded(
                         child: ServiceCard(
                           _queueNameController.text,
@@ -196,9 +203,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   TextButton seeAvailable() {
     return TextButton.icon(
         onPressed: () {
-          final Uri _url = Uri.parse(
-              'https://api.flutter.dev/flutter/material/Icons-class.html#constants');
-          launchUrl(_url);
+          launchUrl(iconLibrary);
         },
         icon: const Icon(Icons.open_in_new),
         label: const Text("See available icons here"));
@@ -304,16 +309,10 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       if (_queueNameController.text == model.queue?.name &&
           _iconNameController.text == model.queue?.iconName &&
           _queueCurrent == model.queue?.current) {
-        return const Text(""); //ShowQR();
+        return const Text("");
       }
 
-      return FloatingActionButton.extended(
-        onPressed: updateQueue,
-        label: const Text('Save'),
-        icon: const Icon(Icons.save),
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      );
+      return SaveFAB(onPressed: updateQueue);
     });
   }
 }
