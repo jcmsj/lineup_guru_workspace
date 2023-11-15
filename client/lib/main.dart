@@ -5,6 +5,7 @@ import 'package:shared/page_title_widget.dart';
 import 'package:shared/queue/list.dart';
 import 'package:shared/queue/notifier.dart';
 import 'package:shared/server_url_notifier.dart';
+import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/custom_app_bar.dart';
 import 'queue_view.dart';
@@ -87,12 +88,51 @@ class _BottomNavBarState extends State<BottomNavBar>
   }
 
   late PageController pageController;
-
+  bool dialogShown = false;
   @override
   void initState() {
     super.initState();
     AppThemeNotifier.of(context).fetch(context);
     pageController = PageController(initialPage: _tabIndex);
+
+    // listen to changes in the queue notifier, if myNumber matches the current number,
+    //  then show an alert dialog
+    Provider.of<QueueNotifier>(context, listen: false).addListener(() async {
+      final qn = Provider.of<QueueNotifier>(context, listen: false);
+      if (!dialogShown && qn.myNumber == qn.queue?.current) {
+        dialogShown = true;
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: SurfaceVariant.bg(context),
+            title: Text("Your turn!",
+                style: TextStyle(
+                  color: SurfaceVariant.fg(context),
+                )),
+            content: Text(
+              "Please proceed to the counter for ${qn.queue!.name}",
+              style: TextStyle(
+                color: SurfaceVariant.fg(context),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(
+                    color: SurfaceVariant.fg(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        dialogShown = false;
+      }
+    });
   }
 
   Icon icon(IconData iconData, bool isActive) {

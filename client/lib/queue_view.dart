@@ -28,7 +28,12 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
           return FloatingActionButton.extended(
             onPressed: () {},
             backgroundColor: SurfaceVariant.bg(context),
-            label: const Text("You are in a different queue"),
+            label: Text(
+              "You are in a different queue",
+              style: TextStyle(
+                color: SurfaceVariant.fg(context),
+              ),
+            ),
             icon: Icon(Icons.warning, color: SurfaceVariant.fg(context)),
           );
         } else {
