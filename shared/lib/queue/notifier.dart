@@ -10,7 +10,17 @@ class QueueNotifier extends ChangeNotifier {
   int get myNumber => _myNumber;
 
   /// The queue that the user joined
-  int activeQueueId = -1;
+  int _activeQueueId = -1;
+
+  /// The queue that the user joined
+  int get activeQueueId => _activeQueueId;
+
+  /// The queue that the user joined
+  set activeQueueId(int value) {
+    _activeQueueId = value;
+    notifyListeners();
+  }
+
   set queue(ShopQueue? queue) {
     _queue = queue;
     notifyListeners();
@@ -18,7 +28,7 @@ class QueueNotifier extends ChangeNotifier {
 
   set myNumber(int myNumber) {
     _myNumber = myNumber;
-    activeQueueId = queue!.id;
+    activeQueueId = queue?.id ?? -1;
     notifyListeners();
   }
 }
