@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/server_url_widget.dart';
-import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/settings_item.dart';
 
@@ -26,22 +25,8 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SettingsItem(
-              child: ListTile(
-                leading: Icon(
-                  Icons.cloud,
-                  color: Surface.fg(context),
-                ),
-                title: const Text(
-                  "Server URL",
-                  textAlign: TextAlign.center,
-                ),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return const ServerUrlScreen();
-                  }));
-                },
-              ),
+            const SettingsItem(
+              child: ServerDialogOpener(),
             ),
             const VertSpace(),
             const SettingsItem(

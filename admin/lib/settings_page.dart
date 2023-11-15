@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared/server_url_widget.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/settings_item.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,20 +35,8 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             const VertSpace(),
-            SettingsItem(
-              child: ListTile(
-                leading: Icon(
-                  Icons.cloud,
-                  color: Surface.fg(context),
-                ),
-                title: const Text(
-                  "Server URL",
-                  textAlign: TextAlign.center,
-                ),
-                onTap: () {
-                  Navigator.pushNamed(context, "/server-url");
-                },
-              ),
+            const SettingsItem(
+              child: ServerDialogOpener(),
             ),
             const VertSpace(),
             const SettingsItem(

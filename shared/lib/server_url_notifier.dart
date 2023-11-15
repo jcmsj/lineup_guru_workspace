@@ -9,6 +9,7 @@ class ServerUrlNotifier extends ChangeNotifier {
 
   String get serverUrl => _serverUrl;
   final trailingSlash = RegExp("/\$");
+
   set serverUrl(String url) {
     //Important: Strip trailing slash
     _serverUrl = url.replaceAll(trailingSlash, "");

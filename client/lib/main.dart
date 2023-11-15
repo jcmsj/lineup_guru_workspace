@@ -8,6 +8,7 @@ import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/custom_app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'queue_view.dart';
 import 'qr_scanner.dart';
 import 'settings_page.dart';
@@ -92,16 +93,54 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   void initState() {
     super.initState();
-    AppThemeNotifier.of(context).fetch(context);
     pageController = PageController(initialPage: _tabIndex);
+    final serverNotifier =
+        Provider.of<ServerUrlNotifier>(context, listen: false);
+    AppThemeNotifier.of(context, listen: false).fetch(context).then((vaue) {
+      setState(() {});
+    });
+    final qn = Provider.of<QueueNotifier>(context, listen: false);
+
+    // Persist the queue number across app restarts using SharedPreferences
+    SharedPreferences.getInstance().then((prefs) => {
+          // Get the last server url used
+          serverNotifier
+              .tryCandidate(prefs.getString('server-url') ?? "")
+              .then((valueVoid) => {
+                    qn.myNumber = prefs.getInt('my-number') ?? -1,
+                    qn.activeQueueId = prefs.getInt('active-queue-id') ?? -1,
+                    // Listen to changes in the server url notifier, and save the url to shared preferences
+                  })
+              .whenComplete(() => {
+                    qn.addListener(() {
+                      final qn =
+                          Provider.of<QueueNotifier>(context, listen: false);
+                      prefs.setInt('my-number', qn.myNumber);
+                      prefs.setInt('active-queue-id', qn.activeQueueId);
+                    }),
+                    serverNotifier.addListener(() {
+                      prefs.setString(
+                        'server-url',
+                        Provider.of<ServerUrlNotifier>(context, listen: false)
+                            .serverUrl,
+                      );
+                      qn.myNumber = -1;
+                      qn.activeQueueId = -1;
+                      AppThemeNotifier.of(context, listen: false)
+                          .fetch(context)
+                          .then(
+                            (value) => setState(() {}),
+                          );
+                    }),
+                  }),
+        });
 
     // listen to changes in the queue notifier, if myNumber matches the current number,
     //  then show an alert dialog
-    Provider.of<QueueNotifier>(context, listen: false).addListener(() async {
-      final qn = Provider.of<QueueNotifier>(context, listen: false);
+    Provider.of<QueueNotifier>(context, listen: false).addListener(() {
       if (!dialogShown && qn.myNumber == qn.queue?.current) {
         dialogShown = true;
-        await showDialog(
+        showDialog(
           context: context,
           builder: (context) => AlertDialog(
             backgroundColor: SurfaceVariant.bg(context),
@@ -129,8 +168,11 @@ class _BottomNavBarState extends State<BottomNavBar>
               ),
             ],
           ),
+        ).then(
+          (value) {
+            dialogShown = false;
+          },
         );
-        dialogShown = false;
       }
     });
   }

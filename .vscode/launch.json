@@ -36,13 +36,13 @@
                 "name": "Admin",
                 "request": "launch",
                 "type": "dart",
-                "program": "client_admin/lib/main.dart"
+                "program": "admin/lib/main.dart"
             },
             {
                 "name": "Admin (chrome)",
                 "request": "launch",
                 "type": "dart",
-                "program": "client_admin/lib/main.dart",
+                "program": "admin/lib/main.dart",
                 "args": ["-d", "chrome"],
             },
             {
@@ -50,7 +50,7 @@
                 "request": "launch",
                 "type": "dart",
                 "flutterMode": "profile",
-                "program": "client_admin/lib/main.dart",
+                "program": "admin/lib/main.dart",
                 "args": ["-d", "chrome"],
             },
             {
@@ -58,7 +58,7 @@
                 "request": "launch",
                 "type": "dart",
                 "flutterMode": "release",
-                "program": "client_admin/lib/main.dart",
+                "program": "admin/lib/main.dart",
                 "args": ["-d", "chrome"],
             }
         ],

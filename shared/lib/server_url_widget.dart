@@ -1,119 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared/save_fab.dart';
+import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
-import 'package:shared/theme/themed_bar.dart';
 
-import 'server_url_notifier.dart';
-
-class ServerUrlScreen extends StatefulWidget {
-  const ServerUrlScreen({super.key});
+class ServerDialog extends StatefulWidget {
+  final String url;
+  const ServerDialog({
+    super.key,
+    required this.url,
+  });
 
   @override
-  State<ServerUrlScreen> createState() => _ServerUrlScreenState();
+  State<ServerDialog> createState() => _ServerDialogState();
 }
 
-class _ServerUrlScreenState extends State<ServerUrlScreen> {
-  final textFieldCtl = TextEditingController();
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is removed from the widget tree
-    textFieldCtl.dispose();
-    super.dispose();
-  }
+class _ServerDialogState extends State<ServerDialog> {
+  late TextEditingController controller;
 
   @override
   void initState() {
     super.initState();
-    textFieldCtl.addListener(() {
-      setState(() {});
-    });
+    controller = TextEditingController();
+    controller.text = widget.url;
   }
 
   @override
-  void didChangeDependencies() {
-    textFieldCtl.text = Provider.of<ServerUrlNotifier>(
-      context,
-      listen: false, // Be sure to listen
-    ).serverUrl;
-    super.didChangeDependencies();
-  }
-
-  void syncToServer() {
-    Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl =
-        textFieldCtl.text;
-    Navigator.pop(context);
-  }
-
-  Widget? showSaveFABOrNull(String serverUrl) {
-    if (serverUrl != textFieldCtl.text) {
-      return SaveFAB(onPressed: syncToServer);
-    }
-    return null;
+  void dispose() {
+    // Clean up the controller when the widget is removed from the widget tree
+    controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ServerUrlNotifier>(builder: (context, model, child) {
-      return Scaffold(
-        appBar: ThemedBar(
-          context: context,
-          title: const Text('Server Url'),
+    return AlertDialog(
+      backgroundColor: SurfaceVariant.bg(context),
+      title: Text(
+        "Server URL",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: SurfaceVariant.fg(context),
         ),
-        // If the server url does not match the controller text, then show SaveFAB
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // 3/4 of screen width
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.75,
-                // TextField with outline that is styled to use the theme's colors
-                child: TextField(
-                  controller: textFieldCtl,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: SurfaceVariant.bg(context),
-                      ),
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    labelText: 'Server Url',
-                    hoverColor: SurfaceVariant.bg(context),
-                    labelStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: SurfaceVariant.bg(context),
-                        ),
-                  ),
-                ),
-              ),
-              ButtonBar(
-                alignment: MainAxisAlignment.center,
-                children: textFieldCtl.text == model.serverUrl
-                    ? []
-                    : [
-                        TextButton.icon(
-                          icon: const Icon(Icons.restore),
-                          onPressed: () {
-                            textFieldCtl.text = model.serverUrl;
-                          },
-                          label: const Text("Reset"),
-                        ),
-                        TextButton.icon(
-                          style: ButtonStyle(
-                            foregroundColor: MaterialStateProperty.all<Color>(
-                                SurfaceVariant.fg(context)),
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                SurfaceVariant.bg(context)),
-                          ),
-                          icon: const Icon(Icons.save),
-                          onPressed: syncToServer,
-                          label: const Text("Save"),
-                        ),
-                      ],
-              ),
-            ],
+      ),
+      content: TextField(
+        controller: controller,
+        style: TextStyle(
+          color: SurfaceVariant.fg(context),
+        ),
+      ),
+      actions: [
+        // add a cancel button
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text(
+            "Cancel",
+            style: TextStyle(
+              color: SurfaceVariant.fg(context),
+            ),
           ),
         ),
-      );
-    });
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context, controller.text);
+          },
+          child: Text(
+            "Save",
+            style: TextStyle(
+              color: SurfaceVariant.fg(context),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Create
+class ServerDialogOpener extends StatelessWidget {
+  const ServerDialogOpener({super.key});
+
+  void snackbar(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: SurfaceVariant.bg(context),
+        showCloseIcon: true,
+        content: Text(
+          "Invalid URL",
+          style: TextStyle(
+            color: SurfaceVariant.fg(context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void tryCandidateOrErrorSnackbar(
+    BuildContext context,
+    String? candidate,
+  ) {
+    if (candidate != null) {
+      print(candidate);
+      Provider.of<ServerUrlNotifier>(context, listen: false)
+          .tryCandidate(candidate)
+          .onError((error, stackTrace) => snackbar(context));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(
+        Icons.cloud,
+        color: Surface.fg(context),
+      ),
+      title: const Text(
+        "Server URL",
+        textAlign: TextAlign.center,
+      ),
+      onTap: () {
+        // Create a dialog that uses the SurfaceVariant's bg and fg for the user to enter the server URL, set the default value as the current url
+        final serverNotifier =
+            Provider.of<ServerUrlNotifier>(context, listen: false);
+        showDialog(
+          context: context,
+          builder: (context) {
+            return ServerDialog(url: serverNotifier.serverUrl);
+          },
+        ).then((candidate) => tryCandidateOrErrorSnackbar(context, candidate));
+      },
+    );
   }
 }

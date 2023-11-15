@@ -7,7 +7,6 @@ import 'package:shared/queue/notifier.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/custom_app_bar.dart';
-import 'package:shared/server_url_widget.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/theme/editor.dart';
@@ -43,7 +42,6 @@ class MyApp extends StatelessWidget {
             '/editor': (ctx) => const EditQueueScreen(),
             '/qr': (ctx) => const QRScreen(),
             '/theme-editor': (ctx) => const ThemeSwitcherScreen(),
-            '/server-url': (ctx) => const ServerUrlScreen(),
           },
         );
       }),
@@ -98,8 +96,11 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   void initState() {
     super.initState();
-    AppThemeNotifier.of(context).fetch(context);
     pageController = PageController(initialPage: _tabIndex);
+    // When server url changes, update the theme
+    AppThemeNotifier.of(context, listen: false).fetch(context);
+    Provider.of<ServerUrlNotifier>(context, listen: false).addListener(
+        () => AppThemeNotifier.of(context, listen: false).fetch(context));
   }
 
   Icon icon(IconData iconData, bool isActive) {

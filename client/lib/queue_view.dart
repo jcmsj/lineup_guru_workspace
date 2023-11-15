@@ -121,6 +121,29 @@ class _QueueViewState extends State<QueueView> {
               queueNotifier.activeQueueId == queueNotifier.queue?.id
                   ? customerStatus(queueNotifier)
                   : const Text(""),
+              const VertSpace(),
+              // Create a ButtonBar with a Leave Queue button having the correct error color, simply set the queue number and activeQueue id to -1
+              queueNotifier.activeQueueId == queueNotifier.queue?.id
+                  ? ButtonBar(
+                      alignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: null,
+                          onLongPress: () async {
+                            queueNotifier.myNumber = -1;
+                            queueNotifier.activeQueueId = -1;
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.errorContainer,
+                          ),
+                          child: Text("Leave Queue",
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error)),
+                        ),
+                      ],
+                    )
+                  : const Text(""),
             ],
           ),
         ),
