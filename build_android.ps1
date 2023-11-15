@@ -1,7 +1,7 @@
 function build_android($proj) {
     echo "Building $proj"
     cd $proj
-    flutter build apk --no-tree-shake-icons
+    flutter build apk --no-tree-shake-icons --target-platform=android-arm64
     # remove $proj.apk if it exists
     $apk = "..\bin\$proj.apk"
     if (Test-Path $apk) {
@@ -12,4 +12,4 @@ function build_android($proj) {
 }
 
 build_android "client"
-build_android "client_admin"
+build_android "admin"
