@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared/queue/notifier.dart';
+import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/service_card.dart';
 import 'package:shared/settings_item.dart';
@@ -38,6 +41,26 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     _iconNameController.text =
         queueNotifier.queue!.iconName; // set the icon name controller
     _queueCurrent = queueNotifier.queue!.current;
+
+    // Every second, poll for the latest queue position
+    Future.doWhile(() async {
+      if (!mounted) {
+        return false;
+      }
+      final serverUrl =
+          Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl;
+      final response = await http
+          .get(Uri.parse('$serverUrl/queue/${queueNotifier.queue!.name}'));
+      if (response.statusCode == 200) {
+        final queue = ShopQueue.fromJson(jsonDecode(response.body));
+        queueNotifier.queue = queueNotifier.queue?.copyWith(
+          lastPosition: queue.lastPosition,
+        );
+        setState(() {});
+      }
+      await Future.delayed(const Duration(seconds: 1));
+      return true;
+    });
   }
 
   @override
@@ -68,7 +91,6 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
         'created_at': queueNotifier.queue!.createdAt.toString(),
       },
     );
-    print(response.body);
     if (response.statusCode == 200) {
       showSavedToast();
     }
@@ -127,6 +149,9 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
             const VertSpace(),
             positionControls(context),
             const VertSpace(),
+            text('Last number served:'),
+            lastServed(context),
+            const VertSpace(),
             const ButtonBar(
               alignment: MainAxisAlignment.center,
               children: [
@@ -138,15 +163,6 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       ),
     );
   }
-
-  // TextButton seeAvailable() {
-  //   return TextButton.icon(
-  //       onPressed: () {
-  //         launchUrl(iconLibrary);
-  //       },
-  //       icon: const Icon(Icons.open_in_new),
-  //       label: const Text("See available icons here"));
-  // }
 
   TextButton copyUrlBtn() {
     return TextButton.icon(
@@ -173,6 +189,27 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onBackground,
           ),
+    );
+  }
+
+  Row lastServed(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Consumer<QueueNotifier>(builder: (context, model, child) {
+              return Text(
+                '${model.queue?.lastPosition}',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 

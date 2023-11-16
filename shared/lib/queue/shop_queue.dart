@@ -24,4 +24,22 @@ class ShopQueue {
       iconName: json['icon'],
     );
   }
+
+  ShopQueue copyWith({
+    int? id,
+    String? name,
+    String? createdAt,
+    int? current,
+    int? lastPosition,
+    String? iconName,
+  }) {
+    return ShopQueue(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+      current: current ?? this.current,
+      lastPosition: lastPosition ?? this.lastPosition,
+      iconName: iconName ?? this.iconName,
+    );
+  }
 }
