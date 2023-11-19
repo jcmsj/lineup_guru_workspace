@@ -27,10 +27,16 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => QueueNotifier(),
+          create: (ctx) => ActiveQueuesNotifier(),
         ),
         ChangeNotifierProvider(
           create: (ctx) => ServerUrlNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => QueueListNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => QueueNotifier(),
         ),
         ChangeNotifierProvider(create: (ctx) => AppThemeNotifier()),
       ],
@@ -65,7 +71,10 @@ class HomePage extends StatelessWidget {
                 onTap: () {
                   Provider.of<QueueNotifier>(context, listen: false).queue =
                       queue;
-                  Navigator.pushNamed(context, "/editor");
+                  Navigator.pushNamed(
+                    context,
+                    "/editor",
+                  );
                 }),
           ),
         ),
@@ -99,16 +108,22 @@ class _BottomNavBarState extends State<BottomNavBar>
     pageController = PageController(initialPage: _tabIndex);
     // When server url changes, update the theme
     AppThemeNotifier.of(context, listen: false).fetch(context);
-    Provider.of<ServerUrlNotifier>(context, listen: false).addListener(
-        () => AppThemeNotifier.of(context, listen: false).fetch(context));
+    Provider.of<QueueListNotifier>(context, listen: false).startTimedFetch(
+      Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
+    );
+    Provider.of<ServerUrlNotifier>(context, listen: false).addListener(() => {
+          AppThemeNotifier.of(context, listen: false).fetch(context),
+          Provider.of<QueueListNotifier>(context, listen: false).stopTimer(),
+          Provider.of<QueueListNotifier>(context, listen: false)
+              .startTimedFetch(
+            Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
+          )
+        });
   }
 
-  Icon icon(IconData iconData, bool isActive) {
-    return Icon(
-      iconData,
-      color: isActive ? Surface.fg(context) : SurfaceVariant.fg(context),
-      size: 35,
-    );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   @override
@@ -131,15 +146,15 @@ class _BottomNavBarState extends State<BottomNavBar>
       ),
       floatingActionButton: _tabIndex != 0 ? null : const AddQueueBtn(),
       bottomNavigationBar: CircleNavBar(
-        activeIcons: [
-          icon(Icons.home_outlined, true),
-          icon(Icons.qr_code_sharp, true),
-          icon(Icons.settings_outlined, true),
+        activeIcons: const [
+          BotIcon(iconData: Icons.home_outlined, isActive: true),
+          BotIcon(iconData: Icons.qr_code_sharp, isActive: true),
+          BotIcon(iconData: Icons.settings_outlined, isActive: true),
         ],
-        inactiveIcons: [
-          icon(Icons.home_outlined, false),
-          icon(Icons.qr_code_sharp, false),
-          icon(Icons.settings_outlined, false),
+        inactiveIcons: const [
+          BotIcon(iconData: Icons.home_outlined, isActive: false),
+          BotIcon(iconData: Icons.qr_code_sharp, isActive: false),
+          BotIcon(iconData: Icons.settings_outlined, isActive: false),
         ],
         color: SurfaceVariant.bg(context),
         circleColor: Surface.bg(context),
@@ -158,6 +173,26 @@ class _BottomNavBarState extends State<BottomNavBar>
           topRight: Radius.circular(30),
         ),
       ),
+    );
+  }
+}
+
+class BotIcon extends StatelessWidget {
+  final IconData iconData;
+  final bool isActive;
+
+  const BotIcon({
+    super.key,
+    required this.iconData,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      iconData,
+      color: isActive ? Surface.fg(context) : SurfaceVariant.fg(context),
+      size: 35,
     );
   }
 }

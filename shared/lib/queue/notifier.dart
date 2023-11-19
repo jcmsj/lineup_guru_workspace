@@ -1,60 +1,91 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:shared/queue/server_functions.dart';
+import 'list.dart';
 import 'shop_queue.dart';
+
+class QueueListNotifier extends ChangeNotifier {
+  List<ShopQueue> queues = [];
+  int _intervalMS = 1000;
+
+  int get intervalMS => _intervalMS;
+
+  set intervalMS(int value) {
+    _intervalMS = value;
+  }
+
+  Timer? timer;
+  Future<void> getQueues(String url) async {
+    queues = await fetchQueues(url);
+    notifyListeners();
+  }
+
+  Future<void> getQueue(String url, String queueName) async {
+    queues = [await fetchQueue(url, queueName)];
+    notifyListeners();
+  }
+
+  void clear() {
+    queues.clear();
+    notifyListeners();
+  }
+
+  void startTimedFetch(String url) {
+    timer = Timer.periodic(Duration(milliseconds: intervalMS), (timer) {
+      getQueues(url);
+    });
+  }
+
+  void stopTimer() {
+    timer?.cancel();
+  }
+
+  ShopQueue? active(int id) {
+    try {
+      return queues.firstWhere((element) => element.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+class ActiveQueuesNotifier extends ChangeNotifier {
+  Map<int, int> joinedQueueIDs = {};
+  Future<void> join(ShopQueue q, String url) async {
+    final assignedNumber = await joinQueue(q, url);
+    add(q.id, assignedNumber);
+  }
+
+  void add(int id, int pos) {
+    joinedQueueIDs[id] = pos;
+    notifyListeners();
+  }
+
+  List<String> toCompactList() {
+    return joinedQueueIDs.entries
+        .map((e) => "${e.key}:${e.value}")
+        .toList()
+        .cast<String>();
+  }
+
+  void clear() {
+    joinedQueueIDs.clear();
+    notifyListeners();
+  }
+
+  void leave(int id) {
+    joinedQueueIDs.remove(id);
+    notifyListeners();
+  }
+}
 
 class QueueNotifier extends ChangeNotifier {
   ShopQueue? _queue;
-  int _myNumber = -1;
   ShopQueue? get queue => _queue;
-  int get myNumber => _myNumber;
+  QueueNotifier();
 
-  /// The queue that the user joined
-  int _activeQueueId = -1;
-
-  /// The queue that the user joined
-  int get activeQueueId => _activeQueueId;
-
-  /// The queue that the user joined
-  set activeQueueId(int value) {
-    _activeQueueId = value;
+  set queue(ShopQueue? value) {
+    _queue = value;
     notifyListeners();
-  }
-
-  set queue(ShopQueue? queue) {
-    _queue = queue;
-    notifyListeners();
-  }
-
-  set myNumber(int myNumber) {
-    _myNumber = myNumber;
-    activeQueueId = queue?.id ?? -1;
-    notifyListeners();
-  }
-}
-
-Future<ShopQueue> pollQueue(String url, String name) async {
-  // Get ServerURL from ServerUrlNotifier
-  final response = await http.get(Uri.parse('$url/queue/$name'));
-  if (response.statusCode == 200) {
-    // body -> json -> Update queueNotifier
-    return ShopQueue.fromJson(jsonDecode(response.body));
-  }
-
-  throw Exception(
-    'Failed to fetch queue. Reason: ${response.body}',
-  );
-}
-
-Future<int> joinQueue(ShopQueue q, String url) async {
-  final response = await http.post(
-    Uri.parse('$url/join/${q.id}'),
-  );
-  if (response.statusCode == 200) {
-    // Do something with the response body
-    Map<String, dynamic> result = jsonDecode(response.body);
-    return result['number'];
-  } else {
-    throw Exception('Failed to join queue');
   }
 }

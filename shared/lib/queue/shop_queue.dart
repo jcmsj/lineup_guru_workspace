@@ -5,6 +5,7 @@ class ShopQueue {
   final int lastPosition;
   final String createdAt;
   final String iconName;
+  final bool isMultiJoin;
   ShopQueue({
     required this.id,
     required this.name,
@@ -12,6 +13,7 @@ class ShopQueue {
     required this.current,
     required this.lastPosition,
     required this.iconName,
+    required this.isMultiJoin,
   });
 
   factory ShopQueue.fromJson(Map<String, dynamic> json) {
@@ -21,7 +23,8 @@ class ShopQueue {
       createdAt: json['created_at'],
       current: json['current'],
       lastPosition: json['last_position'],
-      iconName: json['icon'],
+      iconName: json['icon'] ?? '',
+      isMultiJoin: json['multi_join_on'] == 1,
     );
   }
 
@@ -32,6 +35,7 @@ class ShopQueue {
     int? current,
     int? lastPosition,
     String? iconName,
+    bool? isMultiJoin,
   }) {
     return ShopQueue(
       id: id ?? this.id,
@@ -40,6 +44,7 @@ class ShopQueue {
       current: current ?? this.current,
       lastPosition: lastPosition ?? this.lastPosition,
       iconName: iconName ?? this.iconName,
+      isMultiJoin: isMultiJoin ?? this.isMultiJoin,
     );
   }
 }

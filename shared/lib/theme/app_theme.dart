@@ -135,9 +135,13 @@ class AppTheme {
   Future<AppTheme> fetch(String url) async {
     final result = await http.get(Uri.parse("$url/theme"));
     if (result.statusCode == 200) {
-      return AppTheme.fromJson(
-        jsonDecode(result.body),
-      );
+      try {
+        return AppTheme.fromJson(
+          jsonDecode(result.body),
+        );
+      } catch (e) {
+        return defaultAppTheme;
+      }
     }
     throw Exception('Failed to load theme from server');
   }

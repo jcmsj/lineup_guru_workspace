@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared/page_title_widget.dart';
 import 'package:shared/queue/list.dart';
 import 'package:shared/queue/notifier.dart';
+import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
@@ -25,10 +26,16 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => QueueNotifier(),
+          create: (ctx) => ServerUrlNotifier(),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => ServerUrlNotifier(),
+          create: (ctx) => ActiveQueuesNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => QueueListNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => QueueNotifier(),
         ),
         ChangeNotifierProvider(
           create: (ctx) => AppThemeNotifier(),
@@ -57,11 +64,12 @@ class HomePage extends StatelessWidget {
             builder: (queue) => QueueItem(
                 data: queue,
                 onTap: () {
-                  Provider.of<QueueNotifier>(context, listen: false).queue =
-                      queue;
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const QueueView()),
+                    MaterialPageRoute(
+                        builder: (context) => QueueView(
+                              activeId: queue.id,
+                            )),
                   );
                 }),
           ),
@@ -96,36 +104,56 @@ class _BottomNavBarState extends State<BottomNavBar>
     pageController = PageController(initialPage: _tabIndex);
     final serverNotifier =
         Provider.of<ServerUrlNotifier>(context, listen: false);
-    AppThemeNotifier.of(context, listen: false).fetch(context).then((vaue) {
-      setState(() {});
-    });
-    final qn = Provider.of<QueueNotifier>(context, listen: false);
+    final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
 
     // Persist the queue number across app restarts using SharedPreferences
+
     SharedPreferences.getInstance().then((prefs) => {
-          // Get the last server url used
           serverNotifier
+              // 1. restore the last server url,
               .tryCandidate(prefs.getString('server-url') ?? "")
               .then((valueVoid) => {
-                    qn.myNumber = prefs.getInt('my-number') ?? -1,
-                    qn.activeQueueId = prefs.getInt('active-queue-id') ?? -1,
-                    // Listen to changes in the server url notifier, and save the url to shared preferences
-                  })
-              .whenComplete(() => {
-                    qn.addListener(() {
-                      final qn =
-                          Provider.of<QueueNotifier>(context, listen: false);
-                      prefs.setInt('my-number', qn.myNumber);
-                      prefs.setInt('active-queue-id', qn.activeQueueId);
+                    // 2. sync theme from server
+                    AppThemeNotifier.of(context, listen: false)
+                        .fetch(context)
+                        .then(
+                          (value) => setState(() {}),
+                        ),
+                    // 3. restore the queue positions
+                    prefs.getStringList("queue-positions")?.forEach((id) {
+                      final split = id.split(":");
+                      qn.add(int.parse(split[0]), int.parse(split[1]));
                     }),
+                    //
+                  })
+              // 4. listen to changes in...
+              .whenComplete(() => {
+                    //4.1 The Queue notifier
+                    qn.addListener(() {
+                      final qn = Provider.of<ActiveQueuesNotifier>(context,
+                          listen: false);
+                      final serialized = qn.toCompactList();
+                      prefs.setStringList('queue-positions', serialized);
+                    }),
+                    // 4.2 start polling the server for queues
+                    Provider.of<QueueListNotifier>(context, listen: false)
+                        .stopTimer(),
+                    Provider.of<QueueListNotifier>(context, listen: false)
+                        .startTimedFetch(
+                      Provider.of<ServerUrlNotifier>(context, listen: false)
+                          .serverUrl,
+                    ),
+                    // If the server url changes,
+                    // 1. clear the queue positions
+                    // 2. persist the new server url
+                    // 3. fetch the server's theme
                     serverNotifier.addListener(() {
+                      qn.clear();
                       prefs.setString(
                         'server-url',
                         Provider.of<ServerUrlNotifier>(context, listen: false)
                             .serverUrl,
                       );
-                      qn.myNumber = -1;
-                      qn.activeQueueId = -1;
                       AppThemeNotifier.of(context, listen: false)
                           .fetch(context)
                           .then(
@@ -137,42 +165,25 @@ class _BottomNavBarState extends State<BottomNavBar>
 
     // listen to changes in the queue notifier, if myNumber matches the current number,
     //  then show an alert dialog
-    Provider.of<QueueNotifier>(context, listen: false).addListener(() {
-      if (!dialogShown && qn.myNumber == qn.queue?.current) {
-        dialogShown = true;
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: SurfaceVariant.bg(context),
-            title: Text("Your turn!",
-                style: TextStyle(
-                  color: SurfaceVariant.fg(context),
-                )),
-            content: Text(
-              "Please proceed to the counter for ${qn.queue!.name}",
-              style: TextStyle(
-                color: SurfaceVariant.fg(context),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  "OK",
-                  style: TextStyle(
-                    color: SurfaceVariant.fg(context),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ).then(
-          (value) {
-            dialogShown = false;
-          },
-        );
+
+    Provider.of<QueueListNotifier>(context, listen: false).addListener(() {
+      final ql = Provider.of<QueueListNotifier>(context, listen: false);
+      final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
+
+      // Loop ql.queues, show dialog if it's the customer's turn
+      if (dialogShown) return;
+      for (ShopQueue q in ql.queues) {
+        final assignedNumber = qn.joinedQueueIDs[q.id];
+        if (assignedNumber == q.current) {
+          dialogShown = true;
+          showDialog(
+            context: context,
+            builder: (context) => YourTurnDialog(q: q),
+          ).then((value) => {
+                dialogShown = false,
+              });
+          break;
+        }
       }
     });
   }
@@ -233,6 +244,45 @@ class _BottomNavBarState extends State<BottomNavBar>
           topRight: Radius.circular(30),
         ),
       ),
+    );
+  }
+}
+
+class YourTurnDialog extends StatelessWidget {
+  const YourTurnDialog({
+    super.key,
+    required this.q,
+  });
+
+  final ShopQueue q;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: SurfaceVariant.bg(context),
+      title: Text("Your turn!",
+          style: TextStyle(
+            color: SurfaceVariant.fg(context),
+          )),
+      content: Text(
+        "Please proceed to the counter for ${q.name}",
+        style: TextStyle(
+          color: SurfaceVariant.fg(context),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text(
+            "OK",
+            style: TextStyle(
+              color: SurfaceVariant.fg(context),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

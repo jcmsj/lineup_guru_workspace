@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared/server_url_notifier.dart';
@@ -61,11 +62,39 @@ class QRServerScreen extends StatelessWidget {
                 size: MediaQuery.of(context).size.width * 0.5,
               ),
               const SizedBox(height: 20.0),
-              Text(
-                model.serverUrl,
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Surface.bg(context),
+              Card(
+                color: SurfaceVariant.bg(context),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextButton.icon(
+                    label: Text(model.serverUrl),
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                          SurfaceVariant.fg(context)),
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          SurfaceVariant.bg(context)),
                     ),
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {
+                      // Copy to clipboard
+                      Clipboard.setData(
+                        ClipboardData(text: model.serverUrl),
+                      );
+                      // Show a snackbar
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          showCloseIcon: true,
+                          backgroundColor: Surface.bg(context),
+                          closeIconColor: Surface.fg(context),
+                          content: Text('Copied to Clipboard',
+                              style: TextStyle(
+                                color: Surface.fg(context),
+                              )),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           );

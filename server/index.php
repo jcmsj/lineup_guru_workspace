@@ -78,7 +78,7 @@ function createQueue($db, $vars) {
     /** @var string */
     $name = $_POST['name'];
 
-    $sql = 'INSERT INTO queue (name, icon, current, last_position) VALUES (:name, \'\', 0, 0)';
+    $sql = 'INSERT INTO queue (name, icon, current, last_position, multi_join_on) VALUES (:name, \'\', 0, 0, false)';
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':name', $name);
     $stmt->execute();
@@ -103,13 +103,22 @@ function getQueue($db, $vars) {
 
 // UpdateQueue
 function updateQueue($db, $vars) {
-    $sql = 'UPDATE queue SET name = :name, current = :current, last_position = :last_position, icon = :icon WHERE id = :id';
+    $sql = 'UPDATE queue SET name = :name, current = :current, last_position = :last_position, icon = :icon, multi_join_on = :multi_join_on WHERE id = :id';
     $stmt = $db->prepare($sql);
     $stmt->bindParam(":id", $vars['id']);
     $stmt->bindParam(":name", $_POST['name']);
     $stmt->bindParam(":current", $_POST['current']);
     $stmt->bindParam(":icon", $_POST['icon']);
     $stmt->bindParam(":last_position", $_POST['last_position']);
+    $stmt->bindParam(":multi_join_on", $_POST['multi_join_on']);
+    $stmt->execute();
+}
+
+function setMultiJoin($db, $vars) {
+    $sql = 'UPDATE queue SET multi_join_on = :multi_join_on WHERE id = :id';
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam(":id", $vars['id']);
+    $stmt->bindParam(":multi_join_on", $_POST['multi_join_on']);
     $stmt->execute();
 }
 
@@ -133,23 +142,22 @@ function demand($key) {
 function joinQueue($db, $vars) {
     /** @var string */
     $id = $vars['id'];
-    $sql = 'SELECT last_position FROM queue WHERE id = :id';
+
+    // Increment the last_position of the queue
+    {
+        $increment = "UPDATE queue SET last_position = last_position + 1 WHERE id = :id";
+        $stmt = $db->prepare($increment);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+    }
+
+    // Get the last_position of the queue
+    $sql = "SELECT last_position FROM queue WHERE id = :id";
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':id', $id);
     $result = $stmt->execute();
-
-    if ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $new_pos = $row['last_position'] + 1;
-        $update = 'UPDATE queue SET last_position = :last_pos WHERE id = :id';
-        $stmt2 = $db->prepare($update);
-        $stmt2->bindParam(':id', $id);
-        $stmt2->bindParam(':last_pos', $new_pos);
-        $result = $stmt2->execute();
-        echo_json(['number'=>$new_pos]);
-    } else {
-        header('HTTP/1.1 404 Not Found');
-        echo 'Queue not found';
-    }
+    $assigned_position = $result->fetchArray(SQLITE3_ASSOC)['last_position'];
+    echo_json(['number'=> $assigned_position]);
 }
 
 function clue(string $type) {
@@ -171,6 +179,11 @@ function getTheme($db) {
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':id', $id);
     $result = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    
+    if ($result == false) {
+        echo  "{}";
+        return;
+    }
     echo json_encode(array(
         'id' => $result['id'],
         'seed' => $result['seed'],
@@ -188,17 +201,6 @@ function getTheme($db) {
     ));
 
 }
-// function getStyle($db, $vars) {
-//     $sql = 'SELECT id, name FROM style WHERE name IN ("app.bg", "appBarColor.fg", "appBarColor.bg", "queueItemColor.bg", "queueItemColor.fg", "seed", "brightness")';
-//     $stmt = $db->prepare($sql);
-//     $result = $stmt->execute();
-//     // $rows = array();
-//     // while ($row = ) {
-//     //     $rows[$row] = $row;
-//     // }
-
-//     echo_json($result->fetchArray(SQLITE3_ASSOC));
-// }
 
 function setTheme($db) {
     $theme = json_decode($_POST['theme'], true);

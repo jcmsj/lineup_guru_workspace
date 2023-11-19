@@ -1,58 +1,38 @@
-import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared/page_title_widget.dart';
 import 'package:shared/queue/notifier.dart';
 import 'package:provider/provider.dart';
+import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/settings_item.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/themed_bar.dart';
 
-class JoinOrQRFab extends StatefulWidget {
-  const JoinOrQRFab({super.key});
+class JoinOrQRFab extends StatelessWidget {
+  final bool isQueued;
+  final bool multiJoinOn;
+  // add an onTap callback field
+  final Function() onTap;
 
-  @override
-  State<JoinOrQRFab> createState() => _JoinOrQRFabState();
-}
-
-class _JoinOrQRFabState extends State<JoinOrQRFab> {
+  final bool hasJoinedOtherQueues;
+  const JoinOrQRFab({
+    super.key,
+    required this.isQueued,
+    required this.multiJoinOn,
+    required this.hasJoinedOtherQueues,
+    required this.onTap,
+  });
+  // Check if there are other active queues
   @override
   Widget build(BuildContext context) {
-    return Consumer2<QueueNotifier, ServerUrlNotifier>(
-        builder: (context, queueNotifier, serverUrlNotifier, child) {
-      if (queueNotifier.queue == null) {
-        return const CircularProgressIndicator();
-      } else if (queueNotifier.myNumber > 0) {
-        if (queueNotifier.activeQueueId != queueNotifier.queue?.id) {
-          return FloatingActionButton.extended(
-            onPressed: () {},
-            backgroundColor: SurfaceVariant.bg(context),
-            label: Text(
-              "You are in a different queue",
-              style: TextStyle(
-                color: SurfaceVariant.fg(context),
-              ),
-            ),
-            icon: Icon(Icons.warning, color: SurfaceVariant.fg(context)),
-          );
-        } else {
-          return const Text("");
-        }
-      }
-
+    if (isQueued) {
+      // Show nothing
+      return const Text("");
+    } else if (multiJoinOn || !multiJoinOn && !hasJoinedOtherQueues) {
+      // Allow to join queue
       return FloatingActionButton.extended(
           disabledElevation: 0,
-          onPressed: () async {
-            queueNotifier.myNumber = await joinQueue(
-              queueNotifier.queue!,
-              serverUrlNotifier.serverUrl,
-            );
-            queueNotifier.queue = await pollQueue(
-              serverUrlNotifier.serverUrl,
-              queueNotifier.queue!.name,
-            );
-          },
+          onPressed: onTap,
           backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
           label: Text(
             "Join Queue",
@@ -64,14 +44,28 @@ class _JoinOrQRFabState extends State<JoinOrQRFab> {
             Icons.add,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ));
-    });
+    }
+    // Dont allow to join
+    return FloatingActionButton.extended(
+      onPressed: () {},
+      backgroundColor: SurfaceVariant.bg(context),
+      label: Text(
+        "You are in a different queue",
+        style: TextStyle(
+          color: SurfaceVariant.fg(context),
+        ),
+      ),
+      icon: Icon(
+        Icons.warning,
+        color: SurfaceVariant.fg(context),
+      ),
+    );
   }
 }
 
-// Create a State class that contains the ShopQueue field
-// class _SecondRouteState extends State<SecondRoute> {
 class QueueView extends StatefulWidget {
-  const QueueView({super.key});
+  final int activeId;
+  const QueueView({super.key, required this.activeId});
 
   @override
   State<QueueView> createState() => _QueueViewState();
@@ -79,59 +73,107 @@ class QueueView extends StatefulWidget {
 
 class _QueueViewState extends State<QueueView> {
   // Poll server for latest queue every 2 seconds
-  late Timer _timer;
-
+  late ShopQueue queue;
+  int assignedNumber = -1;
+  bool get isQueued => assignedNumber > -1;
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      log("polling queue");
-      final qn = Provider.of<QueueNotifier>(context, listen: false);
-      qn.queue = await pollQueue(
-          Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
-          qn.queue!.name);
-    });
+    // Monitor QueueListNotifier for changes in the active queue id
+    final ql = Provider.of<QueueListNotifier>(context, listen: false);
+    final _q = ql.active(widget.activeId);
+    if (_q != null) {
+      queue = _q;
+    } else {
+      return;
+    }
+    ql.addListener(onQueueListChange);
+    final activeQueues =
+        Provider.of<ActiveQueuesNotifier>(context, listen: false);
+    onQueueNotifierChange();
+    activeQueues.addListener(onQueueNotifierChange);
   }
 
-  @override // CANCAEL THE TIMER!!
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+  void onQueueListChange() {
+    if (!mounted) {
+      return;
+    }
+    final ql = Provider.of<QueueListNotifier>(context, listen: false);
+    try {
+      setState(() {
+        queue = ql.queues.firstWhere((q) => q.id == widget.activeId);
+      });
+    } on StateError catch (_) {
+      Navigator.pop(context);
+    }
+  }
+
+  void onQueueNotifierChange() {
+    if (!mounted) {
+      return;
+    }
+    final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
+    setState(() {
+      assignedNumber = qn.joinedQueueIDs[widget.activeId] ?? -1;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<QueueNotifier, ServerUrlNotifier>(
-        builder: (context, queueNotifier, serverUrlNotifier, child) {
+    return Consumer2<ActiveQueuesNotifier, ServerUrlNotifier>(
+        builder: (context, activeQueueNotifier, serverUrlNotifier, child) {
       return Scaffold(
         appBar: ThemedBar(
           context: context,
           title: const Text("Queue  Details"),
         ),
-        floatingActionButton: const JoinOrQRFab(),
+        floatingActionButton: JoinOrQRFab(
+            isQueued: isQueued,
+            multiJoinOn: queue.isMultiJoin,
+            hasJoinedOtherQueues: activeQueueNotifier.joinedQueueIDs.isNotEmpty,
+            onTap: () async {
+              activeQueueNotifier.join(queue, serverUrlNotifier.serverUrl);
+            }),
         body: Center(
           child: Column(
             children: [
-              PageTitleWidget(title: "Queue: ${queueNotifier.queue?.name}"),
+              PageTitleWidget(title: "Queue: ${queue.name}"),
               const VertSpace(),
-              currentlyServing(queueNotifier),
+              CurrentlyServing(queue: queue),
               const VertSpace(),
-              lastNumber(queueNotifier),
+              lastNumber(activeQueueNotifier),
               const VertSpace(),
-              queueNotifier.activeQueueId == queueNotifier.queue?.id
-                  ? customerStatus(queueNotifier)
-                  : const Text(""),
+              PositionStatus(
+                assignedNumber: assignedNumber,
+              ),
               const VertSpace(),
-              // Create a ButtonBar with a Leave Queue button having the correct error color, simply set the queue number and activeQueue id to -1
-              queueNotifier.activeQueueId == queueNotifier.queue?.id
+              // Add a text that says that the user is  allowed to join other queues if multiJoinOn is true
+
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: queue.isMultiJoin
+                      ? const Text("Note:\n You may join other queues")
+                      : const Text(
+                          "Note: \n This queue does not allow to join other queues"),
+                ),
+              ),
+              const VertSpace(),
+              isQueued
                   ? ButtonBar(
                       alignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
                           onPressed: null,
                           onLongPress: () async {
-                            queueNotifier.myNumber = -1;
-                            queueNotifier.activeQueueId = -1;
+                            Provider.of<ActiveQueuesNotifier>(context,
+                                    listen: false)
+                                .leave(widget.activeId);
+                            Provider.of<QueueNotifier>(context, listen: false)
+                                .queue = null;
+                            setState(() {
+                              assignedNumber = -1;
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -151,54 +193,80 @@ class _QueueViewState extends State<QueueView> {
     });
   }
 
-  Card currentlyServing(QueueNotifier queueNotifier) {
+  Card lastNumber(ActiveQueuesNotifier queueNotifier) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            const Text(
-              "Currently Serving:",
-              style: TextStyle(fontSize: 20),
+            Text(
+              "Last Number in Queue:",
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
-              "# ${queueNotifier.queue?.current}",
-              style: const TextStyle(fontSize: 20),
+              "# ${queue.lastPosition}",
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Card customerStatus(QueueNotifier queueNotifier) {
+class PositionStatus extends StatelessWidget {
+  const PositionStatus({
+    super.key,
+    required this.assignedNumber,
+  });
+
+  final int assignedNumber;
+  bool get isQueued => assignedNumber > -1;
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              const Text("Status:"),
-              queueNotifier.myNumber < 0
-                  ? const Text("Not in queue", style: TextStyle(fontSize: 20))
-                  : Text(
-                      "You are # ${queueNotifier.myNumber}",
-                      style: const TextStyle(fontSize: 20),
-                    ),
-            ],
-          )),
+        padding: const EdgeInsets.all(8.0),
+        child: Column(children: [
+          const Text("Status:"),
+          isQueued
+              ? Text(
+                  "You are # $assignedNumber",
+                  style: Theme.of(context).textTheme.bodyLarge,
+                )
+              : Text(
+                  "You are not in this queue",
+                  style: Theme.of(context).textTheme.bodyLarge,
+                )
+        ]),
+      ),
     );
   }
+}
 
-  Card lastNumber(QueueNotifier queueNotifier) {
+class CurrentlyServing extends StatelessWidget {
+  final ShopQueue queue;
+
+  const CurrentlyServing({
+    super.key,
+    required this.queue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            const Text("Last Number in Queue:", style: TextStyle(fontSize: 20)),
             Text(
-              "# ${queueNotifier.queue?.lastPosition}",
-              style: const TextStyle(fontSize: 20),
+              "Currently Serving:",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            Text(
+              "# ${queue.current}",
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),

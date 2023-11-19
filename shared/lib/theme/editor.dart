@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/save_fab.dart';
 import 'package:shared/theme/app_theme.dart';
-import 'package:shared/theme/themed_bar.dart';
 import 'notifier.dart';
 import 'color_field.dart';
 
@@ -177,10 +176,6 @@ class ThemeSwitcherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ThemedBar(
-        context: context,
-        title: const Text('Theme Switcher'),
-      ),
       floatingActionButton: SaveFAB(
         onPressed: () {
           Provider.of<AppThemeNotifier>(context, listen: false).submit(context);

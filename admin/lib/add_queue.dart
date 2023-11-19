@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -25,7 +24,10 @@ class AddQueueBtn extends StatelessWidget {
           }
           fetchQueue(serverUrl, name).then((queue) {
             Provider.of<QueueNotifier>(context, listen: false).queue = queue;
-            Navigator.pushNamed(context, "/editor");
+            Navigator.pushNamed(
+              context,
+              "/editor",
+            );
           });
         });
       },

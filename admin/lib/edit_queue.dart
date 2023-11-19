@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -27,7 +26,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   final _iconNameController =
       TextEditingController(); // added icon name controller
   int _queueCurrent = 0;
-
+  bool isMultiJoin = false;
   @override
   void initState() {
     super.initState();
@@ -41,7 +40,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     _iconNameController.text =
         queueNotifier.queue!.iconName; // set the icon name controller
     _queueCurrent = queueNotifier.queue!.current;
-
+    isMultiJoin = queueNotifier.queue!.isMultiJoin;
     // Every second, poll for the latest queue position
     Future.doWhile(() async {
       if (!mounted) {
@@ -89,6 +88,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
         'icon': newIconName, // add the new icon name to the request body
         'last_position': queueNotifier.queue!.lastPosition.toString(),
         'created_at': queueNotifier.queue!.createdAt.toString(),
+        'multi_join_on': isMultiJoin ? '1' : '0',
       },
     );
     if (response.statusCode == 200) {
@@ -115,6 +115,9 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       appBar: ThemedBar(
         context: context,
         title: const Text("Edit Queue"),
+        actions: const [
+          DeleteQueueBtn(),
+        ],
       ),
       floatingActionButton: saveBtn(),
       body: Padding(
@@ -152,12 +155,22 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
             text('Last number served:'),
             lastServed(context),
             const VertSpace(),
-            const ButtonBar(
-              alignment: MainAxisAlignment.center,
-              children: [
-                DeleteQueueBtn(),
-              ],
-            )
+            SwitchListTile(
+              value: isMultiJoin,
+              // activeColor: SurfaceVariant.bg(context),
+              // inactiveTrackColor: SurfaceVariant.fg(context),
+              onChanged: (val) {
+                setState(() {
+                  isMultiJoin = val;
+                });
+              },
+              title: Text(
+                "Allow multiple joins",
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+              ),
+            ),
           ],
         ),
       ),
@@ -297,7 +310,8 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     return Consumer(builder: (context, QueueNotifier model, child) {
       if (_queueNameController.text == model.queue?.name &&
           _iconNameController.text == model.queue?.iconName &&
-          _queueCurrent == model.queue?.current) {
+          _queueCurrent == model.queue?.current &&
+          isMultiJoin == model.queue?.isMultiJoin) {
         return const Text("");
       }
 
@@ -323,59 +337,7 @@ class _DeleteQueueBtnState extends State<DeleteQueueBtn> {
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return AlertDialog(
-                backgroundColor: SurfaceVariant.bg(context),
-                title: Text("Confirm Delete",
-                    style: TextStyle(
-                      color: SurfaceVariant.fg(context),
-                    )),
-                content:
-                    Consumer<QueueNotifier>(builder: (context, model, child) {
-                  return Text(
-                    "Are you sure you want to delete this queue '${model.queue!.name}'?",
-                    style: TextStyle(
-                      color: SurfaceVariant.fg(context),
-                    ),
-                  );
-                }),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    // emphasize the cancel button
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                    ),
-                    child: const Text("Cancel"),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      final serverUrl =
-                          Provider.of<ServerUrlNotifier>(context, listen: false)
-                              .serverUrl;
-                      final queue =
-                          Provider.of<QueueNotifier>(context, listen: false)
-                              .queue;
-                      http
-                          .delete(Uri.parse('$serverUrl/queue/${queue!.id}'))
-                          .then(
-                        (response) {
-                          // remove the dialog and editor screen
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                    child: Text(
-                      "Delete",
-                      style: TextStyle(
-                        color: SurfaceVariant.fg(context),
-                      ),
-                    ),
-                  )
-                ],
-              );
+              return const DeleteQueueDialog();
             },
           );
         },
@@ -385,5 +347,63 @@ class _DeleteQueueBtnState extends State<DeleteQueueBtn> {
           foregroundColor: Theme.of(context).colorScheme.error,
           backgroundColor: Theme.of(context).colorScheme.errorContainer,
         ));
+  }
+}
+
+class DeleteQueueDialog extends StatelessWidget {
+  const DeleteQueueDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: SurfaceVariant.bg(context),
+      title: Text("Confirm Delete",
+          style: TextStyle(
+            color: SurfaceVariant.fg(context),
+          )),
+      content: Consumer<QueueNotifier>(builder: (context, model, child) {
+        return Text(
+          "Are you sure you want to delete this queue '${model.queue!.name}'?",
+          style: TextStyle(
+            color: SurfaceVariant.fg(context),
+          ),
+        );
+      }),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          // emphasize the cancel button
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () {
+            final serverUrl =
+                Provider.of<ServerUrlNotifier>(context, listen: false)
+                    .serverUrl;
+            final queue =
+                Provider.of<QueueNotifier>(context, listen: false).queue;
+            http.delete(Uri.parse('$serverUrl/queue/${queue!.id}')).then(
+              (response) {
+                // remove the dialog and editor screen
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+            );
+          },
+          child: Text(
+            "Delete",
+            style: TextStyle(
+              color: SurfaceVariant.fg(context),
+            ),
+          ),
+        )
+      ],
+    );
   }
 }
