@@ -36,12 +36,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const VertSpace(),
-            SettingsItem(
-              child: TextButton(
-                onPressed: () {
-                  Provider.of<AppThemeNotifier>(context, listen: false)
-                      .fetch(context);
-                },
+            GestureDetector(
+              onTap: () => {
+                Provider.of<AppThemeNotifier>(context, listen: false)
+                    .fetch(context)
+              },
+              child: SettingsItem(
                 child: Text(
                   "Sync App Theme",
                   style:

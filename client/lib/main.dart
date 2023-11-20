@@ -9,7 +9,6 @@ import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/custom_app_bar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'queue_view.dart';
 import 'qr_scanner.dart';
 import 'settings_page.dart';
@@ -51,8 +50,85 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool dialogShown = false;
+  @override
+  void initState() {
+    super.initState();
+    final serverNotifier =
+        Provider.of<ServerUrlNotifier>(context, listen: false);
+    final activeQueue =
+        Provider.of<ActiveQueuesNotifier>(context, listen: false);
+
+    // Persist the queue number across app restarts using SharedPreferences
+    serverNotifier
+        .restore()
+        .then((prefs) => {
+              // 1. restore the queue positions
+              activeQueue.load(prefs),
+            })
+        // 2. listen to changes in...
+        .whenComplete(() => {
+              // 2.1 Immediately load the theme
+              AppThemeNotifier.of(context, listen: false).fetch(context),
+              // 2.2 The Queue notifier
+              activeQueue.start(),
+              // 2.3 start polling the server for queues
+              Provider.of<QueueListNotifier>(context, listen: false)
+                  .stopTimer(),
+              Provider.of<QueueListNotifier>(context, listen: false)
+                  .startTimedFetch(
+                Provider.of<ServerUrlNotifier>(context, listen: false)
+                    .serverUrl,
+              ),
+              // If the server url changes,
+              // 1. clear the queue positions
+              // 2. persist the new server url
+              // 3. fetch the server's theme
+              serverNotifier.addListener(
+                () {
+                  activeQueue.clear();
+                  serverNotifier.onChange();
+                  AppThemeNotifier.of(context, listen: false)
+                      .fetch(context)
+                      .then(
+                        (value) => setState(() {}),
+                      );
+                },
+              ),
+            });
+
+    // listen to changes in the queue notifier, if myNumber matches the current number,
+    //  then show an alert dialog
+
+    Provider.of<QueueListNotifier>(context, listen: false).addListener(() {
+      final ql = Provider.of<QueueListNotifier>(context, listen: false);
+      final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
+
+      // Loop ql.queues, show dialog if it's the customer's turn
+      if (dialogShown) return;
+      for (ShopQueue q in ql.queues) {
+        final assignedNumber = qn.joinedQueueIDs[q.id];
+        if (assignedNumber == q.current) {
+          dialogShown = true;
+          showDialog(
+            context: context,
+            builder: (context) => YourTurnDialog(q: q),
+          ).then((value) => {
+                dialogShown = false,
+              });
+          break;
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,95 +173,10 @@ class _BottomNavBarState extends State<BottomNavBar>
   }
 
   late PageController pageController;
-  bool dialogShown = false;
   @override
   void initState() {
     super.initState();
     pageController = PageController(initialPage: _tabIndex);
-    final serverNotifier =
-        Provider.of<ServerUrlNotifier>(context, listen: false);
-    final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
-
-    // Persist the queue number across app restarts using SharedPreferences
-
-    SharedPreferences.getInstance().then((prefs) => {
-          serverNotifier
-              // 1. restore the last server url,
-              .tryCandidate(prefs.getString('server-url') ?? "")
-              .then((valueVoid) => {
-                    // 2. sync theme from server
-                    AppThemeNotifier.of(context, listen: false)
-                        .fetch(context)
-                        .then(
-                          (value) => setState(() {}),
-                        ),
-                    // 3. restore the queue positions
-                    prefs.getStringList("queue-positions")?.forEach((id) {
-                      final split = id.split(":");
-                      qn.add(int.parse(split[0]), int.parse(split[1]));
-                    }),
-                    //
-                  })
-              // 4. listen to changes in...
-              .whenComplete(() => {
-                    //4.1 The Queue notifier
-                    qn.addListener(() {
-                      final qn = Provider.of<ActiveQueuesNotifier>(context,
-                          listen: false);
-                      final serialized = qn.toCompactList();
-                      prefs.setStringList('queue-positions', serialized);
-                    }),
-                    // 4.2 start polling the server for queues
-                    Provider.of<QueueListNotifier>(context, listen: false)
-                        .stopTimer(),
-                    Provider.of<QueueListNotifier>(context, listen: false)
-                        .startTimedFetch(
-                      Provider.of<ServerUrlNotifier>(context, listen: false)
-                          .serverUrl,
-                    ),
-                    // If the server url changes,
-                    // 1. clear the queue positions
-                    // 2. persist the new server url
-                    // 3. fetch the server's theme
-                    serverNotifier.addListener(() {
-                      qn.clear();
-                      prefs.setString(
-                        'server-url',
-                        Provider.of<ServerUrlNotifier>(context, listen: false)
-                            .serverUrl,
-                      );
-                      AppThemeNotifier.of(context, listen: false)
-                          .fetch(context)
-                          .then(
-                            (value) => setState(() {}),
-                          );
-                    }),
-                  }),
-        });
-
-    // listen to changes in the queue notifier, if myNumber matches the current number,
-    //  then show an alert dialog
-
-    Provider.of<QueueListNotifier>(context, listen: false).addListener(() {
-      final ql = Provider.of<QueueListNotifier>(context, listen: false);
-      final qn = Provider.of<ActiveQueuesNotifier>(context, listen: false);
-
-      // Loop ql.queues, show dialog if it's the customer's turn
-      if (dialogShown) return;
-      for (ShopQueue q in ql.queues) {
-        final assignedNumber = qn.joinedQueueIDs[q.id];
-        if (assignedNumber == q.current) {
-          dialogShown = true;
-          showDialog(
-            context: context,
-            builder: (context) => YourTurnDialog(q: q),
-          ).then((value) => {
-                dialogShown = false,
-              });
-          break;
-        }
-      }
-    });
   }
 
   Icon icon(IconData iconData, bool isActive) {
@@ -201,8 +192,8 @@ class _BottomNavBarState extends State<BottomNavBar>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        height: 125,
+      appBar: CustomAppBar(
+        height: MediaQuery.of(context).size.height / 10,
         title: "Lineup Guru",
       ),
       body: PageView(

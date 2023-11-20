@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared/snack.dart';
 import '/server_url_notifier.dart';
 import 'app_theme.dart';
 
@@ -46,17 +47,9 @@ class AppThemeNotifier extends ChangeNotifier {
     ).serverUrl;
     final response = await theme.submit(url);
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Theme saved"),
-        ),
-      );
+      snack(context, "Theme saved");
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Failed to save theme"),
-        ),
-      );
+      snack(context, "Failed to save theme");
     }
   }
 

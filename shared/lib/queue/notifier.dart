@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared/queue/server_functions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'list.dart';
 import 'shop_queue.dart';
 
@@ -76,6 +77,24 @@ class ActiveQueuesNotifier extends ChangeNotifier {
   void leave(int id) {
     joinedQueueIDs.remove(id);
     notifyListeners();
+  }
+
+  void start() {
+    addListener(onChanges);
+  }
+
+  void onChanges() {
+    final serialized = toCompactList();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setStringList('queue-positions', serialized);
+    });
+  }
+
+  void load(SharedPreferences prefs) {
+    prefs.getStringList("queue-positions")?.forEach((id) {
+      final split = id.split(":");
+      add(int.parse(split[0]), int.parse(split[1]));
+    });
   }
 }
 

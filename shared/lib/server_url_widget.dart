@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
 
+import 'snack.dart';
+
 class ServerDialog extends StatefulWidget {
   final String url;
   const ServerDialog({
@@ -12,6 +14,13 @@ class ServerDialog extends StatefulWidget {
 
   @override
   State<ServerDialog> createState() => _ServerDialogState();
+
+  static onChange(BuildContext context, String candidate) {
+    Provider.of<ServerUrlNotifier>(context, listen: false)
+        .tryCandidate(candidate)
+        .then((value) => {snack(context, "Success")})
+        .onError((error, stackTrace) => {snackErr(context, "Invalid URL")});
+  }
 }
 
 class _ServerDialogState extends State<ServerDialog> {
@@ -78,36 +87,14 @@ class _ServerDialogState extends State<ServerDialog> {
 }
 
 // Create
-class ServerDialogOpener extends StatelessWidget {
+class ServerDialogOpener extends StatefulWidget {
   const ServerDialogOpener({super.key});
 
-  void snackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: SurfaceVariant.bg(context),
-        showCloseIcon: true,
-        content: Text(
-          "Invalid URL",
-          style: TextStyle(
-            color: SurfaceVariant.fg(context),
-          ),
-        ),
-      ),
-    );
-  }
+  @override
+  State<ServerDialogOpener> createState() => _ServerDialogOpenerState();
+}
 
-  void tryCandidateOrErrorSnackbar(
-    BuildContext context,
-    String? candidate,
-  ) {
-    if (candidate != null) {
-      print(candidate);
-      Provider.of<ServerUrlNotifier>(context, listen: false)
-          .tryCandidate(candidate)
-          .onError((error, stackTrace) => snackbar(context));
-    }
-  }
-
+class _ServerDialogOpenerState extends State<ServerDialogOpener> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -128,7 +115,7 @@ class ServerDialogOpener extends StatelessWidget {
           builder: (context) {
             return ServerDialog(url: serverNotifier.serverUrl);
           },
-        ).then((candidate) => tryCandidateOrErrorSnackbar(context, candidate));
+        ).then((candidate) => ServerDialog.onChange(context, candidate));
       },
     );
   }

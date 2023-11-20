@@ -7,6 +7,7 @@ import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/service_card.dart';
 import 'package:shared/settings_item.dart';
+import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/save_fab.dart';
 import 'package:shared/theme/themed_bar.dart';
@@ -66,8 +67,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   void activate() {
     final queueNotifier = Provider.of<QueueNotifier>(context, listen: false);
     _queueNameController.text = queueNotifier.queue!.name;
-    _iconNameController.text =
-        queueNotifier.queue!.iconName; // set the icon name controller
+    _iconNameController.text = queueNotifier.queue!.iconName;
     _queueCurrent = queueNotifier.queue!.current;
     didChangeDependencies();
     super.activate();
@@ -92,21 +92,13 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       },
     );
     if (response.statusCode == 200) {
+      activate();
       showSavedToast();
     }
   }
 
   void showSavedToast() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Queue has been updated',
-          style: TextStyle(color: Surface.fg(context)),
-        ),
-        backgroundColor: Surface.bg(context),
-        showCloseIcon: true,
-      ),
-    );
+    snack(context, "Queue updated");
   }
 
   @override
@@ -181,16 +173,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     return TextButton.icon(
         onPressed: () {
           Clipboard.setData(ClipboardData(text: iconLibrary.toString()));
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'URL copied to clipboard',
-                style: TextStyle(color: Surface.fg(context)),
-              ),
-              backgroundColor: Surface.bg(context),
-              showCloseIcon: true,
-            ),
-          );
+          snack(context, 'Copied to Clipboard');
         },
         icon: const Icon(Icons.copy),
         label: const Text("See icons by visiting this URL"));

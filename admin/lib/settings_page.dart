@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared/server_url_notifier.dart';
+import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/settings_item.dart';
 import 'package:shared/theme/editor.dart';
@@ -41,14 +42,13 @@ class _SettingsPageState extends State<SettingsPage>
           tabs: const [
             Tab(text: 'Info'),
             Tab(text: 'Theme Editor'),
-            Tab(text: 'Config'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          const Center(
+        children: const [
+          Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -68,14 +68,7 @@ class _SettingsPageState extends State<SettingsPage>
               ],
             ),
           ),
-          const ThemeSwitcherScreen(),
-          Consumer<ServerUrlNotifier>(builder: (context, model, child) {
-            return SizedBox(
-              // 1/12 of screen height
-              height: MediaQuery.of(context).size.height / 12,
-              child: ServerField(url: model.serverUrl),
-            );
-          }),
+          ThemeSwitcherScreen(),
         ],
       ),
     );
@@ -153,21 +146,17 @@ class _ServerFieldState extends State<ServerField> {
                   backgroundColor: SurfaceVariant.bg(context),
                 ),
                 onPressed: () async {
+                  if (controller.text == widget.url) {
+                    return;
+                  }
                   // Set the url to the controller text
                   Provider.of<ServerUrlNotifier>(context, listen: false)
                       .tryCandidate(controller.text)
                       .onError((error, stackTrace) =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              showCloseIcon: true,
-                              backgroundColor: Surface.bg(context),
-                              closeIconColor: Surface.fg(context),
-                              content: Text('Error: $error',
-                                  style: TextStyle(
-                                    color: Surface.fg(context),
-                                  )),
-                            ),
-                          ));
+                          snackErr(context, 'Error: $error'))
+                      .then((_) => {
+                            snack(context, 'Success!'),
+                          });
                 },
                 child: Text(
                   "Save",

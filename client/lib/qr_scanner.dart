@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared/server_url_notifier.dart';
+import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
 
 class QRScanner extends StatefulWidget {
@@ -95,42 +96,25 @@ class _QRScannerState extends State<QRScanner> {
         .onError(onServerUrlErr)
         .then((_) => {
               // Show toast that is connected to the server
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    showCloseIcon: true,
-                    content: Text(
-                      'Connected to ${result!.code.toString()}',
-                    )),
-              ),
+              snack(context, 'Connected to ${result!.code.toString()}')
             });
   }
 
   onServerUrlErr(Object? e, StackTrace? stackTrace) {
     log('onServerUrlErr $e');
     if (e is FormatException) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-        'Invalid URL',
-      )));
+      snack(context, 'Invalid URL');
       controller?.resumeCamera();
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          showCloseIcon: true,
-          content: Text(
-            'Unknown Error ${e.toString()}}',
-          )),
-    );
+    snack(context, 'Unknown Error ${e.toString()}}');
     result = null;
   }
 
   void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
     log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
     if (!p) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('no Permission')),
-      );
+      snackErr(context, 'no Permission');
     }
   }
 

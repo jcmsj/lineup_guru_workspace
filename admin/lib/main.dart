@@ -16,11 +16,11 @@ import 'edit_queue.dart';
 import 'settings_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const AdminApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AdminApp extends StatelessWidget {
+  const AdminApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +55,47 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    final serverNotifier =
+        Provider.of<ServerUrlNotifier>(context, listen: false);
+    // Restore from shared preferences the last server used
+    serverNotifier
+        .restore()
+        // Regardless if any error occurs in the server,
+        // start listening to changes in...
+        .whenComplete(() => {
+              // 4.2 start polling the server for queues
+              Provider.of<QueueListNotifier>(context, listen: false)
+                  .stopTimer(),
+              Provider.of<QueueListNotifier>(context, listen: false)
+                  .startTimedFetch(
+                Provider.of<ServerUrlNotifier>(context, listen: false)
+                    .serverUrl,
+              ),
+              // 1. sync theme from server
+              AppThemeNotifier.of(context, listen: false).fetch(context),
+              // If the server url changes,
+              // 1. clear the queue positions
+              // 2. persist the new server url
+              // 3. fetch the server's theme
+              serverNotifier.addListener(
+                () {
+                  serverNotifier.onChange();
+                  AppThemeNotifier.of(context, listen: false).fetch(context);
+                },
+              ),
+            });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,31 +145,14 @@ class _BottomNavBarState extends State<BottomNavBar>
   void initState() {
     super.initState();
     pageController = PageController(initialPage: _tabIndex);
-    // When server url changes, update the theme
-    AppThemeNotifier.of(context, listen: false).fetch(context);
-    Provider.of<QueueListNotifier>(context, listen: false).startTimedFetch(
-      Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
-    );
-    Provider.of<ServerUrlNotifier>(context, listen: false).addListener(() => {
-          AppThemeNotifier.of(context, listen: false).fetch(context),
-          Provider.of<QueueListNotifier>(context, listen: false).stopTimer(),
-          Provider.of<QueueListNotifier>(context, listen: false)
-              .startTimedFetch(
-            Provider.of<ServerUrlNotifier>(context, listen: false).serverUrl,
-          )
-        });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        height: 125,
+      appBar: CustomAppBar(
+        // 1/10 of screen height
+        height: MediaQuery.of(context).size.height / 10,
         title: "Line-Up Guru | Admin",
       ),
       body: PageView(

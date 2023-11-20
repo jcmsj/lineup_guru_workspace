@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/queue/shop_queue.dart';
+import 'package:shared/server_url_widget.dart';
+import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
 
 class QRScreen extends StatelessWidget {
@@ -62,44 +64,63 @@ class QRServerScreen extends StatelessWidget {
                 size: MediaQuery.of(context).size.width * 0.5,
               ),
               const SizedBox(height: 20.0),
-              Card(
-                color: SurfaceVariant.bg(context),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton.icon(
-                    label: Text(model.serverUrl),
+              ButtonBar(
+                alignment: MainAxisAlignment.center,
+                children: [
+                  // Add a copy button and edit dialog
+                  CopyBtn(url: model.serverUrl),
+                  // add a button with an edit icon, on pressed show a dialog of ServerDialog
+                  IconButton(
+                    icon: const Icon(Icons.edit),
                     style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(
-                          SurfaceVariant.fg(context)),
                       backgroundColor: MaterialStateProperty.all<Color>(
                           SurfaceVariant.bg(context)),
                     ),
-                    icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      // Copy to clipboard
-                      Clipboard.setData(
-                        ClipboardData(text: model.serverUrl),
-                      );
-                      // Show a snackbar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          showCloseIcon: true,
-                          backgroundColor: Surface.bg(context),
-                          closeIconColor: Surface.fg(context),
-                          content: Text('Copied to Clipboard',
-                              style: TextStyle(
-                                color: Surface.fg(context),
-                              )),
-                        ),
-                      );
+                    onPressed: () async {
+                      // Show the dialog
+                      await showDialog<String>(
+                        context: context,
+                        builder: (context) =>
+                            ServerDialog(url: model.serverUrl),
+                      ).then((value) =>
+                          value != null &&
+                          ServerDialog.onChange(context, value));
                     },
                   ),
-                ),
+                ],
               ),
             ],
           );
         }),
       ),
+    );
+  }
+}
+
+class CopyBtn extends StatelessWidget {
+  final String url;
+
+  const CopyBtn({super.key, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      label: Text(url),
+      style: ButtonStyle(
+        foregroundColor:
+            MaterialStateProperty.all<Color>(SurfaceVariant.fg(context)),
+        backgroundColor:
+            MaterialStateProperty.all<Color>(SurfaceVariant.bg(context)),
+      ),
+      icon: const Icon(Icons.copy),
+      onPressed: () {
+        // Copy to clipboard
+        Clipboard.setData(
+          ClipboardData(text: url),
+        );
+        // Show a snackbar
+        snack(context, 'Copied to Clipboard');
+      },
     );
   }
 }

@@ -1,0 +1,13 @@
+{
+    "seed": "FFF0CDDB",
+    "brightness": "Brightness.light",
+    "appBar": {
+        "background": "ff1e3932",
+        "foreground": "ffffffff"
+    },
+    "queueItem": {
+        "background": "ffd4e9e2",
+        "foreground": "ff000000"
+    },
+    "appBackground": "ffffffff"
+}
