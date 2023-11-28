@@ -34,21 +34,12 @@ Future<ShopQueue> fetchQueue(String url, String queueName) async {
 
 typedef QueueWidgetBuilder = Widget Function(ShopQueue queue);
 
-class QueueBuilder extends StatefulWidget {
+class QueueBuilder extends StatelessWidget {
   final QueueWidgetBuilder builder;
-  const QueueBuilder({super.key, required this.builder});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _QueueBuilderState();
-  }
-}
-
-class _QueueBuilderState extends State<QueueBuilder> {
-  @override
-  void initState() {
-    super.initState();
-  }
+  const QueueBuilder({
+    super.key,
+    required this.builder,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +61,7 @@ class _QueueBuilderState extends State<QueueBuilder> {
               ),
               itemCount: model.queues.length,
               itemBuilder: (BuildContext context, int index) {
-                return widget.builder(model.queues[index]);
+                return builder(model.queues[index]);
               });
         },
       ),

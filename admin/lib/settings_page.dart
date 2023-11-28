@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared/About.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
-import 'package:shared/settings_item.dart';
 import 'package:shared/theme/editor.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -20,7 +20,7 @@ class _SettingsPageState extends State<SettingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -40,35 +40,16 @@ class _SettingsPageState extends State<SettingsPage>
           indicatorColor: Theme.of(context).colorScheme.onBackground,
           unselectedLabelColor: Theme.of(context).colorScheme.onBackground,
           tabs: const [
-            Tab(text: 'Info'),
             Tab(text: 'Theme Editor'),
+            Tab(text: 'About The App'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: const [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // SettingsItem(
-                //   child: Text(
-                //     "Manual",
-                //     style: TextStyle(fontSize: 25),
-                //   ),
-                // ),
-                // VertSpace(),
-                SettingsItem(
-                  child: Text(
-                    "About Us",
-                    style: TextStyle(fontSize: 25),
-                  ),
-                ),
-              ],
-            ),
-          ),
           ThemeSwitcherScreen(),
+          AboutPage(),
         ],
       ),
     );

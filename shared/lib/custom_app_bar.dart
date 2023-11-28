@@ -5,8 +5,14 @@ import 'package:shared/theme/themed_bar.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final String title;
+  final List<Widget>? actions;
 
-  const CustomAppBar({super.key, required this.height, required this.title});
+  const CustomAppBar({
+    super.key,
+    required this.height,
+    required this.title,
+    this.actions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +24,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         centerTitle: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(
               Icons.qr_code,
@@ -26,6 +33,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 10),
             Text(
               title,
+              textAlign: TextAlign.center,
               // make a style that us headline medium and uses SurfaceVariant.fg
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: SurfaceVariant.fg(context),
@@ -33,6 +41,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ),
+        actions: actions,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             bottom: Radius.circular(30),

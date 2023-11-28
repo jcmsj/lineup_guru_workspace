@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared/custom_app_bar.dart';
 import 'package:shared/page_title_widget.dart';
 import 'package:shared/queue/notifier.dart';
 import 'package:provider/provider.dart';
@@ -123,9 +124,9 @@ class _QueueViewState extends State<QueueView> {
     return Consumer2<ActiveQueuesNotifier, ServerUrlNotifier>(
         builder: (context, activeQueueNotifier, serverUrlNotifier, child) {
       return Scaffold(
-        appBar: ThemedBar(
-          context: context,
-          title: const Text("Queue  Details"),
+        appBar: CustomAppBar(
+          title: "Queue  Details",
+          height: MediaQuery.of(context).size.height / 10,
         ),
         floatingActionButton: JoinOrQRFab(
             isQueued: isQueued,

@@ -18,7 +18,7 @@ class PageTitleState extends State<PageTitleWidget> {
         ? Theme.of(context).colorScheme.inverseSurface
         : onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.all(30),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Text(
@@ -28,7 +28,7 @@ class PageTitleState extends State<PageTitleWidget> {
               color: titleColor,
             ),
           ),
-          const SizedBox(height: 8.0),
+          const SizedBox(height: 6.0),
           Container(
             height: 1.5,
             width: MediaQuery.of(context).size.width * 0.75,

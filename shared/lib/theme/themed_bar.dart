@@ -18,10 +18,8 @@ class ThemedBar extends AppBar {
   });
 
   @override
-  Color get backgroundColor =>
-      super.backgroundColor ?? Theme.of(context).colorScheme.surfaceVariant;
+  Color get backgroundColor => Theme.of(context).colorScheme.surfaceVariant;
 
   @override
-  Color get foregroundColor =>
-      super.foregroundColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+  Color get foregroundColor => Theme.of(context).colorScheme.onSurfaceVariant;
 }

@@ -10,6 +10,7 @@ import 'package:shared/custom_app_bar.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/theme/editor.dart';
+import 'package:shared/bot_icon.dart';
 import 'qr_screen.dart';
 import 'add_queue.dart';
 import 'edit_queue.dart';
@@ -183,8 +184,8 @@ class _BottomNavBarState extends State<BottomNavBar>
         circleShadowColor: Surface.fg(context),
         shadowColor: Surface.fg(context),
         elevation: 10,
-        height: 90,
-        circleWidth: 70,
+        height: MediaQuery.of(context).size.height / 13,
+        circleWidth: MediaQuery.of(context).size.height / 15,
         activeIndex: tabIndex,
         onTap: (index) {
           tabIndex = index;
@@ -195,26 +196,6 @@ class _BottomNavBarState extends State<BottomNavBar>
           topRight: Radius.circular(30),
         ),
       ),
-    );
-  }
-}
-
-class BotIcon extends StatelessWidget {
-  final IconData iconData;
-  final bool isActive;
-
-  const BotIcon({
-    super.key,
-    required this.iconData,
-    required this.isActive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      iconData,
-      color: isActive ? Surface.fg(context) : SurfaceVariant.fg(context),
-      size: 35,
     );
   }
 }

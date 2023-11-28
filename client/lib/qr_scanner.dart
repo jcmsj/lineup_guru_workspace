@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:shared/page_title_widget.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
+import 'package:shared/theme/themed_bar.dart';
 
 class QRScanner extends StatefulWidget {
   const QRScanner({super.key});
@@ -44,8 +46,13 @@ class _QRScannerState extends State<QRScanner> {
         ),
       ),
       body: Column(
-        children: <Widget>[
-          Expanded(flex: 4, child: _buildQrView(context)),
+        children: [
+          const PageTitleWidget(
+            title: 'Scan QR Code',
+          ),
+          Expanded(
+            child: _buildQrView(context),
+          ),
         ],
       ),
     );
@@ -54,7 +61,7 @@ class _QRScannerState extends State<QRScanner> {
   Widget _buildQrView(BuildContext context) {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     // 3/4 of screen width
-    var scanArea = MediaQuery.of(context).size.width * 0.75;
+    final scanArea = MediaQuery.of(context).size.width * 0.75;
     // To ensure the Scanner view is properly sizes after rotation
     // we need to listen for Flutter SizeChanged notification and update controller
     return QRView(

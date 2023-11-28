@@ -9,6 +9,7 @@ import 'package:shared/server_url_notifier.dart';
 import 'package:shared/theme/app_theme.dart';
 import 'package:shared/theme/notifier.dart';
 import 'package:shared/custom_app_bar.dart';
+import 'package:shared/bot_icon.dart';
 import 'queue_view.dart';
 import 'qr_scanner.dart';
 import 'settings_page.dart';
@@ -179,16 +180,6 @@ class _BottomNavBarState extends State<BottomNavBar>
     pageController = PageController(initialPage: _tabIndex);
   }
 
-  Icon icon(IconData iconData, bool isActive) {
-    return Icon(
-      iconData,
-      color: isActive
-          ? Theme.of(context).colorScheme.onSurface
-          : Theme.of(context).colorScheme.onSurfaceVariant,
-      size: 35,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -208,23 +199,23 @@ class _BottomNavBarState extends State<BottomNavBar>
         ],
       ),
       bottomNavigationBar: CircleNavBar(
-        activeIcons: [
-          icon(Icons.home_outlined, true),
-          icon(Icons.qr_code_sharp, true),
-          icon(Icons.settings_outlined, true),
+        activeIcons: const [
+          BotIcon(iconData: Icons.home_outlined, isActive: true),
+          BotIcon(iconData: Icons.qr_code_sharp, isActive: true),
+          BotIcon(iconData: Icons.settings_outlined, isActive: true),
         ],
-        inactiveIcons: [
-          icon(Icons.home_outlined, false),
-          icon(Icons.qr_code_sharp, false),
-          icon(Icons.settings_outlined, false),
+        inactiveIcons: const [
+          BotIcon(iconData: Icons.home_outlined, isActive: false),
+          BotIcon(iconData: Icons.qr_code_sharp, isActive: false),
+          BotIcon(iconData: Icons.settings_outlined, isActive: false),
         ],
         color: Theme.of(context).colorScheme.surfaceVariant,
         circleColor: Theme.of(context).colorScheme.surface,
         circleShadowColor: Theme.of(context).colorScheme.onSurface,
         shadowColor: Theme.of(context).colorScheme.onSurface,
         elevation: 5,
-        height: 90,
-        circleWidth: 70,
+        height: MediaQuery.of(context).size.height / 13,
+        circleWidth: MediaQuery.of(context).size.height / 15,
         activeIndex: tabIndex,
         onTap: (index) {
           tabIndex = index;
