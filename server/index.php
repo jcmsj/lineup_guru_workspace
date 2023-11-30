@@ -78,7 +78,7 @@ function createQueue($db, $vars) {
     /** @var string */
     $name = $_POST['name'];
 
-    $sql = 'INSERT INTO queue (name, icon, current, last_position, multi_join_on) VALUES (:name, \'\', 0, 0, false)';
+    $sql = 'INSERT INTO queue (name, icon, current, last_position, multi_join_on) VALUES (:name, \'\', 0, 0, 0)';
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':name', $name);
     $stmt->execute();

@@ -33,6 +33,7 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
     super.initState();
     // set the queue name and current number from the queueNotifier
     final queueNotifier = Provider.of<QueueNotifier>(context, listen: false);
+
     if (queueNotifier.queue == null) {
       return;
     }
@@ -92,7 +93,12 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       },
     );
     if (response.statusCode == 200) {
-      activate();
+      queueNotifier.queue = queueNotifier.queue?.copyWith(
+        name: newName,
+        iconName: newIconName, // update the icon name
+        current: _queueCurrent,
+        isMultiJoin: isMultiJoin,
+      );
       showSavedToast();
     }
   }

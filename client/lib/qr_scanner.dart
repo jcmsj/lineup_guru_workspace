@@ -7,7 +7,6 @@ import 'package:shared/page_title_widget.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/snack.dart';
 import 'package:shared/theme/app_theme.dart';
-import 'package:shared/theme/themed_bar.dart';
 
 class QRScanner extends StatefulWidget {
   const QRScanner({super.key});

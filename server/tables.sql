@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS queue (
     current INT NOT NULL,
     last_position INT NOT NULL,
     icon VARCHAR(255) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    multi_join_on boolean NOT NULL
+    multi_join_on boolean NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS theme(

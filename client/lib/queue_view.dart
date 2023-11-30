@@ -7,7 +7,6 @@ import 'package:shared/queue/shop_queue.dart';
 import 'package:shared/server_url_notifier.dart';
 import 'package:shared/settings_item.dart';
 import 'package:shared/theme/app_theme.dart';
-import 'package:shared/theme/themed_bar.dart';
 
 class JoinOrQRFab extends StatelessWidget {
   final bool isQueued;
@@ -82,9 +81,9 @@ class _QueueViewState extends State<QueueView> {
     super.initState();
     // Monitor QueueListNotifier for changes in the active queue id
     final ql = Provider.of<QueueListNotifier>(context, listen: false);
-    final _q = ql.active(widget.activeId);
-    if (_q != null) {
-      queue = _q;
+    final q = ql.active(widget.activeId);
+    if (q != null) {
+      queue = q;
     } else {
       return;
     }
